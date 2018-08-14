@@ -1,6 +1,8 @@
 ## R Tutorial at the WZB
 
-### Slides
+### 1 – Introduction
 
-* [01: Introduction](slides/01intro.html)
+* [Slides](slides/01intro.html)
+* [Slides PDF](slides/01intro.pdf)
+* [Tasks](tasks_and_solutions/01intro_tasks.html)
 
