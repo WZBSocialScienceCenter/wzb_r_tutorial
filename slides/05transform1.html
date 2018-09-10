@@ -11,7 +11,7 @@
 
 <meta name="author" content="Markus Konrad" />
 
-<meta name="date" content="2018-10-25" />
+<meta name="date" content="2018-11-22" />
 
 <title>R Tutorial at the WZB</title>
 
@@ -70,6 +70,7 @@ h6 {
 }
 </style>
 
+<link href="data:text/css;charset=utf-8,%2Ewarning%20%7B%0Abackground%3A%20%23FFBBBB%3B%0Apadding%3A%2010px%2010px%204px%2010px%3B%0Amargin%2Dbottom%3A%2010px%3B%0A%7D%0A%2Esource%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2080%25%3B%0Atext%2Dalign%3A%20right%3B%0A%7D%0A%2Etable%2Esmall%20%7B%0Amin%2Dwidth%3A%20auto%20%21important%3B%0Awidth%3A%20auto%20%21important%3B%0A%7D%0A%2Efigure%20%7B%0Abackground%3A%20%23f5f5f5%3B%0Aborder%3A%201px%20solid%20%23ccc%3B%0Aborder%2Dradius%3A%204px%3B%0Adisplay%3A%20inline%2Dblock%3B%0Amax%2Dwidth%3A%20100%25%3B%0Apadding%3A%203px%3B%0Amargin%2Dbottom%3A%2010px%3B%0A%7D%0A%2Efigure%20p%20%7B%0Afont%2Dsize%3A%2080%25%3B%0Amargin%3A%205px%200%200%200%3B%0A%7D%0A%2Efigure%20p%2Esource%20%7B%0Atext%2Dalign%3A%20right%3B%0A%7D%0A%2Equote%5Fslide%20%7B%0Amargin%2Dleft%3A%2040px%3B%0Amargin%2Dbottom%3A%2010px%3B%0Aborder%3A%201px%20solid%20%23ccc%3B%0Aborder%2Dradius%3A%204px%3B%0Apadding%3A%2010px%3B%0A%7D%0A%2Equote%5Fslide%20ul%20%7B%0Amargin%3A%200%3B%0Apadding%3A%200%200%200%2020px%3B%0A%7D" rel="stylesheet" type="text/css" />
 
 </head>
 
@@ -123,34 +124,171 @@ $(document).ready(function () {
 
 
 <h1 class="title toc-ignore">R Tutorial at the WZB</h1>
-<h3 class="subtitle"><em>Tasks for session 1 - Introduction</em></h3>
+<h3 class="subtitle"><em>5 - Transforming data with R I</em></h3>
 <h4 class="author"><em>Markus Konrad</em></h4>
-<h4 class="date"><em>October 25, 2018</em></h4>
+<h4 class="date"><em>November 22, 2018</em></h4>
 
 </div>
 
+<div id="TOC">
+<ul>
+<li><a href="#introductory-note">Introductory note</a></li>
+<li><a href="#solution-for-tasks-4">Solution for tasks #4</a></li>
+<li><a href="#data-transformation-using-the-tidyverse"><span class="toc-section-number">1</span> Data transformation using the <em>tidyverse</em></a><ul>
+<li><a href="#filtering-rows-with-filter"><span class="toc-section-number">1.1</span> Filtering rows with <code>filter()</code></a></li>
+<li><a href="#filtering-for-distinct-rows-with-distinct"><span class="toc-section-number">1.2</span> Filtering for distinct rows with <code>distinct()</code></a></li>
+<li><a href="#sorting-rows-with-arrange"><span class="toc-section-number">1.3</span> Sorting rows with <code>arrange()</code></a></li>
+<li><a href="#selecting-and-renaming-columns-with-select-and-rename"><span class="toc-section-number">1.4</span> Selecting and renaming columns with <code>select()</code> and <code>rename()</code></a></li>
+<li><a href="#adding-new-variables-with-mutate-and-transmute"><span class="toc-section-number">1.5</span> Adding new variables with <code>mutate()</code> and <code>transmute()</code></a></li>
+</ul></li>
+<li><a href="#tasks"><span class="toc-section-number">2</span> Tasks</a></li>
+</ul>
+</div>
 
-<div id="tasks" class="section level2">
-<h2>Tasks</h2>
+<div id="introductory-note" class="section level2 unnumbered">
+<h2>Introductory note</h2>
+<p><strong>For this session there are no slides, because I’m not at the WZB to hold a presentation. Instead I provide you with a full document for self-study. As always, there are some tasks at the end of the document which you should complete. I recommend that you not only read the document, but also try out some of the code examples and experiment with them.</strong></p>
+</div>
+<div id="solution-for-tasks-4" class="section level2 unnumbered">
+<h2>Solution for tasks #4</h2>
+<p>The solutions for tasks #4 are now online on <a href="https://wzbsocialsciencecenter.github.io/wzb_r_tutorial/" class="uri">https://wzbsocialsciencecenter.github.io/wzb_r_tutorial/</a>.</p>
+</div>
+<div id="data-transformation-using-the-tidyverse" class="section level1">
+<h1><span class="header-section-number">1</span> Data transformation using the <em>tidyverse</em></h1>
+<p>After being introduced to the basics of R programming using “traditional” R (or: <em>base R</em>) concepts, we will now focus on a more modern way of R programming using the <em>tidyverse philosophy</em>. Don’t worry, you will still apply concepts that you learnt in the last sessions with base R as you will soon notice! The modern R programming approach in the tidyverse builds on top of the basic R concepts and provides a common, clearly defined “grammar” for all the main aspects of data analysis including data transformation, visualization and modeling. The tidyverse is organized into several R packages, each serving a distinct purpose. You can inform yourself about the individual packages on <a href="https://www.tidyverse.org/packages/" class="uri">https://www.tidyverse.org/packages/</a>.</p>
+<p>The concept of the tidyverse and the underlying software packages are mainly developed by Hadley Wickham. Together with Garrett Grolemund, he wrote the book <em>R for Data Science</em>. The book is freely available online on <a href="http://r4ds.had.co.nz/" class="uri">http://r4ds.had.co.nz/</a>. We will use this book to study the main concepts of modern data transformation in R.</p>
+<p>Before diving into the tidyverse, make sure you’ve installed the <em>tidyverse</em> package via RStudio’s package manager or the <code>install.packages()</code> function. <strong>You also need to install <em>nycflights13</em> package in order to complete the exercises.</strong></p>
+<div id="filtering-rows-with-filter" class="section level2">
+<h2><span class="header-section-number">1.1</span> Filtering rows with <code>filter()</code></h2>
+<p>Read <a href="http://r4ds.had.co.nz/transform.html#introduction-2">sections 5.1 and 5.2</a> on filtering (i.e. subsetting) observations with <code>filter()</code> from the tidyverse package <em>dplyr</em>. Notice how the concepts for comparisons and logical operators are similar to what we’ve learnt. They are only applied now in a different context.</p>
+</div>
+<div id="filtering-for-distinct-rows-with-distinct" class="section level2">
+<h2><span class="header-section-number">1.2</span> Filtering for distinct rows with <code>distinct()</code></h2>
+<p>Sometimes, you need to get all <em>distinct</em> observations of a vector or data frame. This means, that the resulting vector or data frame does not include duplicate observations. Only <em>unique</em> observations will be left.</p>
+<p>In base R, there is the function <code>unique()</code> which will remove duplicate values in vectors:</p>
+<pre class="r"><code>colors &lt;- c('red', 'green', 'red', 'yellow', 'red', 'yellow')
+unique(colors)</code></pre>
+<pre><code>## [1] &quot;red&quot;    &quot;green&quot;  &quot;yellow&quot;</code></pre>
+<p>To filter data frames for unique observations, we can use <code>distinct()</code> from the tidyverse package <em>dplyr</em>. With this, for example, we can find all unique carrier codes in the <code>flights</code> data set:</p>
+<pre class="r"><code>library(nycflights13)
+library(tidyverse)
+
+distinct(flights, carrier)</code></pre>
+<pre><code>## # A tibble: 16 x 1
+##    carrier
+##    &lt;chr&gt;  
+##  1 UA     
+##  2 AA     
+##  3 B6     
+##  4 DL     
+##  5 EV     
+##  6 MQ     
+##  7 US     
+##  8 WN     
+##  9 VX     
+## 10 FL     
+## 11 AS     
+## 12 9E     
+## 13 F9     
+## 14 HA     
+## 15 YV     
+## 16 OO</code></pre>
+<p>We could do the same with <code>unique()</code>, however, notice that <code>distinct()</code> always returns a data frame (the above having only a single column) while <code>unique()</code> returns a vector:</p>
+<pre class="r"><code>unique(flights$carrier)</code></pre>
+<pre><code>##  [1] &quot;UA&quot; &quot;AA&quot; &quot;B6&quot; &quot;DL&quot; &quot;EV&quot; &quot;MQ&quot; &quot;US&quot; &quot;WN&quot; &quot;VX&quot; &quot;FL&quot; &quot;AS&quot; &quot;9E&quot; &quot;F9&quot; &quot;HA&quot;
+## [15] &quot;YV&quot; &quot;OO&quot;</code></pre>
+<p>So far we only created distinct observations of a single column, but you can also find the distinct observations using several (or all) columns in a data frame. With this, for example, we can find all distinct flight routes in the <code>flights</code> data set:</p>
+<pre class="r"><code>distinct(flights, origin, dest)</code></pre>
+<pre><code>## # A tibble: 224 x 2
+##    origin dest 
+##    &lt;chr&gt;  &lt;chr&gt;
+##  1 EWR    IAH  
+##  2 LGA    IAH  
+##  3 JFK    MIA  
+##  4 JFK    BQN  
+##  5 LGA    ATL  
+##  6 EWR    ORD  
+##  7 EWR    FLL  
+##  8 LGA    IAD  
+##  9 JFK    MCO  
+## 10 LGA    ORD  
+## # ... with 214 more rows</code></pre>
+</div>
+<div id="sorting-rows-with-arrange" class="section level2">
+<h2><span class="header-section-number">1.3</span> Sorting rows with <code>arrange()</code></h2>
+<p>Read <a href="http://r4ds.had.co.nz/transform.html#arrange-rows-with-arrange">sections 5.3</a> on sorting observations with <code>arrange()</code> from the tidyverse package <em>dplyr</em>. We already got to know the function <code>sort()</code> for sorting vectors. <code>arrange()</code> allows us to sort data frames, even using several variables to sort along.</p>
+</div>
+<div id="selecting-and-renaming-columns-with-select-and-rename" class="section level2">
+<h2><span class="header-section-number">1.4</span> Selecting and renaming columns with <code>select()</code> and <code>rename()</code></h2>
+<p>Read <a href="http://r4ds.had.co.nz/transform.html#select">sections 5.4</a> on selecting and renaming variables in data frames with <code>select()</code> and <code>rename()</code> from the tidyverse package <em>dplyr</em>.</p>
+</div>
+<div id="adding-new-variables-with-mutate-and-transmute" class="section level2">
+<h2><span class="header-section-number">1.5</span> Adding new variables with <code>mutate()</code> and <code>transmute()</code></h2>
+<p>At first, read <a href="http://r4ds.had.co.nz/transform.html#add-new-variables-with-mutate">sections 5.5</a> on adding new variables to data frames with <code>mutate()</code> and <code>transmute()</code> from the tidyverse package <em>dplyr</em>. Then continue with the two sections below.</p>
+<p><strong>Note:</strong> You can gloss over section 5.5.1 “Useful creation functions” quickly – you don’t need to understand what these functions do in all detail.</p>
+<div id="type-conversion-with-mutate-and-transmute" class="section level3">
+<h3><span class="header-section-number">1.5.1</span> Type conversion with <code>mutate()</code> and <code>transmute()</code></h3>
+<p><code>mutate()</code> and <code>transmute()</code> are often used to convert the data type of variables. Let’s consider this data frame, where <code>smoker</code> is indicated with a numerical variable where <em>0</em> means <em>non-smoker</em> and <em>1</em> means <em>smoker</em>:</p>
+<pre class="r"><code>(smoker_data &lt;- data.frame(age = c(19, 15, 24, 29, 17), smoker = c(0, 0, 1, NA, 1)))</code></pre>
+<pre><code>##   age smoker
+## 1  19      0
+## 2  15      0
+## 3  24      1
+## 4  29     NA
+## 5  17      1</code></pre>
+<p>We can convert this to a logical <code>TRUE</code>/<code>FALSE</code> vector with the conversion function <code>as.logical</code>:</p>
+<pre class="r"><code>(smoker_data &lt;- mutate(smoker_data, smoker = as.logical(smoker)))</code></pre>
+<pre><code>##   age smoker
+## 1  19  FALSE
+## 2  15  FALSE
+## 3  24   TRUE
+## 4  29     NA
+## 5  17   TRUE</code></pre>
+</div>
+<div id="mutate-and-transmute-in-combination-with-ifelse" class="section level3">
+<h3><span class="header-section-number">1.5.2</span> <code>mutate()</code> and <code>transmute()</code> in combination with <code>ifelse()</code></h3>
+<p><code>mutate()</code> and <code>transmute()</code> are often used in combination with the function <code>ifelse(cond, true-value, false-value)</code>. This function allows to set one value <code>true-value</code> if a condition <code>cond</code> is <code>TRUE</code> and another value <code>false-value</code> if this condition is <code>FALSE</code>.</p>
+<p>Imagine that NA values were coded as <code>-1</code> in the <code>smoker</code> variable:</p>
+<pre class="r"><code>(smoker_data &lt;- data.frame(age = c(19, 15, 24, 29, 17), smoker = c(0, 0, 1, -1, 1)))</code></pre>
+<pre><code>##   age smoker
+## 1  19      0
+## 2  15      0
+## 3  24      1
+## 4  29     -1
+## 5  17      1</code></pre>
+<p>Now if we tried to convert that to a logical vector, we would run into trouble, because everything that is not <em>0</em> is considered <code>TRUE</code>, hence <em>-1</em> also becomes <code>TRUE</code>:</p>
+<pre class="r"><code>mutate(smoker_data, smoker = as.logical(smoker))</code></pre>
+<pre><code>##   age smoker
+## 1  19  FALSE
+## 2  15  FALSE
+## 3  24   TRUE
+## 4  29   TRUE
+## 5  17   TRUE</code></pre>
+<p>In order to fix that, we can use <code>ifelse()</code>. We set the condition <code>smoker == -1</code> and pass <code>NA</code> as value that should be taken whenever the condition is <code>TRUE</code>. On all other occasions, we want to retain the original value, hence we pass <code>smoker</code>. After converting the output to <code>as.logical()</code> we get the correct result:</p>
+<pre class="r"><code>mutate(smoker_data, smoker = as.logical(ifelse(smoker == -1, NA, smoker)))</code></pre>
+<pre><code>##   age smoker
+## 1  19  FALSE
+## 2  15  FALSE
+## 3  24   TRUE
+## 4  29     NA
+## 5  17   TRUE</code></pre>
+</div>
+</div>
+</div>
+<div id="tasks" class="section level1">
+<h1><span class="header-section-number">2</span> Tasks</h1>
+<p><strong>Note: You need to install the packages <em>nycflights13</em> and <em>tidyverse</em> in order to complete the exercises.</strong></p>
 <ol style="list-style-type: decimal">
-<li>Install the package <em>MASS</em></li>
-<li>Load the packages <em>MASS</em> and <em>tidyverse</em>. Loading these packages will produce some messages on the console. What do you think do they mean? (If you don’t know, just make a wild guess!)</li>
-<li>Load the builtin dataset “cats” provided by the package MASS (Hint: Run <code>data(cats)</code> to load the data)</li>
-<li>Inform yourself about the data using R’s help system – What are the variables in the dataset?</li>
-<li>View the data using 4 different perspectives:
-<ul>
-<li>Issue simply the command <code>cats</code> at the console – What generally happens when you simply use an object’s name as command?</li>
-<li>Using the functions <code>head</code> and <code>tail</code>. Inform yourself beforehand what these functions do (again, using the help system).</li>
-<li>Using RStudios <code>View</code> function (use the function from the console and also check out the small table icon in the “Environment” tab in the top right pane)</li>
-</ul></li>
-<li>Construct a <em>scatter plot</em> of the data using <code>qplot</code> from the <em>ggplot2</em> package (incl. in <em>tidyverse</em>)
-<ul>
-<li>inform yourself on the Web, about what a scatter plot is</li>
-<li>see the documentation for <code>qplot</code> in R’s help system</li>
-<li>plot <code>Bwt</code> (body weight) on the x-axis and <code>Hwt</code> (heart weight) on the y-axis</li>
-<li>Hint: a scatterplot can be generated with a command like this:</li>
-<li><code>qplot(&lt;VARIABLE ON X&gt;, &lt;VARIABLE ON Y&gt;, data = &lt;DATASET&gt;)</code></li>
-</ul></li>
+<li>Complete exercises 1 to 3 from <a href="http://r4ds.had.co.nz/transform.html#exercises-7">section 5.2.4 in <em>R for Data Science</em></a>. <strong>For exercise 1, choose only 3 out of the 7 tasks (you can choose any task you want).</strong></li>
+<li>Complete exercises 1 to 3 from <a href="http://r4ds.had.co.nz/transform.html#exercises-8">section 5.3.1 in <em>R for Data Science</em></a></li>
+<li>Complete exercises 1 and 2 from <a href="http://r4ds.had.co.nz/transform.html#exercises-9">section 5.4.1 in <em>R for Data Science</em></a></li>
+<li>Download and unzip <code>05transform1-resources.zip</code> from the <a href="https://wzbsocialsciencecenter.github.io/wzb_r_tutorial/">course website</a>, read <code>codebook.txt</code> and complete the following tasks:
+<ol style="list-style-type: decimal">
+<li>Load the CSV file <code>schulen_potsdam.csv</code> into R without specifying further parameters for <code>read.csv()</code>. Have a look at the data using functions like <code>str()</code> and <code>head()</code>. Do you spot any potential problems?</li>
+<li>Load the data again, this time specifying two additional parameters for <code>read.csv()</code>: <code>stringsAsFactors = FALSE, colClasses = c(plz = &quot;character&quot;)</code>. Inspect the result. What is the effect of these parameters? Are all problems now fixed and do the variable types match the specifications in the codebook (see <code>codebook.txt</code> also contained in the zip-file)? If not, convert these variables to the correct data type using <code>mutate()</code> and <code>as.factor()</code>.</li>
+<li>Create a new variable <code>full_address</code> using <code>mutate()</code>. This new variable should contain the full address consisting of street name, zip code and city name, e.g. <em>“Carl-von-Ossietzky-Straße 37 01570 Potsdam”</em>. You can combine several strings to form one string using the function <code>paste()</code>.</li>
+</ol></li>
+<li><strong>Optional</strong>: Complete exercises 1 and 2 from <a href="http://r4ds.had.co.nz/transform.html#exercises-10">section 5.5.2 in <em>R for Data Science</em></a></li>
 </ol>
 </div>
 

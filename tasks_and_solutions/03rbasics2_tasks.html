@@ -11,7 +11,7 @@
 
 <meta name="author" content="Markus Konrad" />
 
-<meta name="date" content="2018-10-25" />
+<meta name="date" content="2018-11-08" />
 
 <title>R Tutorial at the WZB</title>
 
@@ -123,9 +123,9 @@ $(document).ready(function () {
 
 
 <h1 class="title toc-ignore">R Tutorial at the WZB</h1>
-<h3 class="subtitle"><em>Tasks for session 1 - Introduction</em></h3>
+<h3 class="subtitle"><em>Tasks for session 3 - R Basics II</em></h3>
 <h4 class="author"><em>Markus Konrad</em></h4>
-<h4 class="date"><em>October 25, 2018</em></h4>
+<h4 class="date"><em>November 08, 2018</em></h4>
 
 </div>
 
@@ -133,25 +133,42 @@ $(document).ready(function () {
 <div id="tasks" class="section level2">
 <h2>Tasks</h2>
 <ol style="list-style-type: decimal">
-<li>Install the package <em>MASS</em></li>
-<li>Load the packages <em>MASS</em> and <em>tidyverse</em>. Loading these packages will produce some messages on the console. What do you think do they mean? (If you don’t know, just make a wild guess!)</li>
-<li>Load the builtin dataset “cats” provided by the package MASS (Hint: Run <code>data(cats)</code> to load the data)</li>
-<li>Inform yourself about the data using R’s help system – What are the variables in the dataset?</li>
-<li>View the data using 4 different perspectives:
-<ul>
-<li>Issue simply the command <code>cats</code> at the console – What generally happens when you simply use an object’s name as command?</li>
-<li>Using the functions <code>head</code> and <code>tail</code>. Inform yourself beforehand what these functions do (again, using the help system).</li>
-<li>Using RStudios <code>View</code> function (use the function from the console and also check out the small table icon in the “Environment” tab in the top right pane)</li>
-</ul></li>
-<li>Construct a <em>scatter plot</em> of the data using <code>qplot</code> from the <em>ggplot2</em> package (incl. in <em>tidyverse</em>)
-<ul>
-<li>inform yourself on the Web, about what a scatter plot is</li>
-<li>see the documentation for <code>qplot</code> in R’s help system</li>
-<li>plot <code>Bwt</code> (body weight) on the x-axis and <code>Hwt</code> (heart weight) on the y-axis</li>
-<li>Hint: a scatterplot can be generated with a command like this:</li>
-<li><code>qplot(&lt;VARIABLE ON X&gt;, &lt;VARIABLE ON Y&gt;, data = &lt;DATASET&gt;)</code></li>
-</ul></li>
+<li>Consider the command <code>mean(head(sort(airquality$Ozone), 10))</code>. Describe in one sentence what the effect of this command is.</li>
+<li>Use the same command as above, but reverse the ordering. How do you do that and what’s the effect of it? HINT: Remember that <code>sort()</code> has an optional parameter <code>decreasing</code> to control the ordering direction.</li>
+<li>Calculate the standard deviation of the variable <code>Solar.R</code> in the built-in data set <code>airquality</code>. Use the function <code>sd()</code> for this and set it to ignore <code>NA</code> values in the input vector.</li>
+<li><code>rnorm()</code> is a function to generate random numbers from a normal distribution. Find out which parameters it has using R’s built-in help function. Now generate 100 random numbers from a normal distribution with mean 30 and standard deviation 2. Calculate the mean from these numbers. How much differs the mean of your generated numbers from the mean 30?</li>
+<li>Use the 100 random numbers generated in the previous task and count how many of them are greater than or equal 30.</li>
+<li>Load the package <code>MASS</code> and its data set <code>cats</code> as in the previous session. Answer the following questions (Hint: Create a logical expression and use <code>sum()</code> to count the occurrences of <code>TRUE</code> values, e.g. <code>sum(cats$Sex == 'F')</code>):
+<ol style="list-style-type: decimal">
+<li>How many female, how many male cats are there in the data set? Store the results in two objects <code>n_female</code> and <code>n_male</code>.</li>
+<li>How many female cats have a body weight of at least 2.5kg? What’s the ratio of these in the group of all female cats?</li>
+<li>How many male cats have a body weight of at least 2.5kg? What’s the ratio of these in the group of all male cats?</li>
+<li>How many female cats have a body weight of at least 2.5kg <em>or</em> a heart weight of 10g and more? What’s the ratio of these in the group of all female cats?</li>
+<li>How many male cats have a body weight of at least 2.5kg <em>or</em> a heart weight of 10g and more? What’s the ratio of these in the group of all male cats?</li>
+</ol></li>
+<li>Complete <strong>lesson 8</strong> of SWIRL Course <strong>“R Programming”</strong>. (See the notes in session 2 tasks about installing SWIRL if you have not done that yet.)</li>
+<li>What’s wrong with the following lines of code:</li>
 </ol>
+<p>Example 1:</p>
+<pre class="r"><code>sum(airquality$Month = 5)
+## Error</code></pre>
+<p>Example 2:</p>
+<pre class="r"><code>smoker &lt;- c(TRUE, NA, FALSE, TRUE, FALSE)
+sum(smoker, na.rm &lt;- TRUE)
+## Error</code></pre>
+<p>Example 3:</p>
+<pre class="r"><code>age &lt;- c(20, NA, 19, 51, 20)
+mean(age, na.rm == TRUE)
+## Error</code></pre>
+<p>Example 4:</p>
+<pre class="r"><code>country &lt;- factor(c('USA', 'GB', 'GB', 'DE', 'USA'))
+country_is_usa &lt;- (country = 'USA')
+country_is_usa</code></pre>
+<pre><code>## [1] &quot;USA&quot;</code></pre>
+<p>Example 5:</p>
+<pre class="r"><code>age &lt;- c(20, NA, 19, 51, 20)
+median(age, rm.na = TRUE)</code></pre>
+<pre><code>## [1] NA</code></pre>
 </div>
 
 

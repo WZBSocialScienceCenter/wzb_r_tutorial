@@ -11,7 +11,7 @@
 
 <meta name="author" content="Markus Konrad" />
 
-<meta name="date" content="2018-10-25" />
+<meta name="date" content="2018-11-22" />
 
 <title>R Tutorial at the WZB</title>
 
@@ -123,34 +123,27 @@ $(document).ready(function () {
 
 
 <h1 class="title toc-ignore">R Tutorial at the WZB</h1>
-<h3 class="subtitle"><em>Tasks for session 1 - Introduction</em></h3>
+<h3 class="subtitle"><em>Tasks for session 4 - Transforming data with R I</em></h3>
 <h4 class="author"><em>Markus Konrad</em></h4>
-<h4 class="date"><em>October 25, 2018</em></h4>
+<h4 class="date"><em>November 22, 2018</em></h4>
 
 </div>
 
 
 <div id="tasks" class="section level2">
 <h2>Tasks</h2>
+<p><strong>Note: You need to install the packages <em>nycflights13</em> and <em>tidyverse</em> in order to complete the exercises.</strong></p>
 <ol style="list-style-type: decimal">
-<li>Install the package <em>MASS</em></li>
-<li>Load the packages <em>MASS</em> and <em>tidyverse</em>. Loading these packages will produce some messages on the console. What do you think do they mean? (If you don’t know, just make a wild guess!)</li>
-<li>Load the builtin dataset “cats” provided by the package MASS (Hint: Run <code>data(cats)</code> to load the data)</li>
-<li>Inform yourself about the data using R’s help system – What are the variables in the dataset?</li>
-<li>View the data using 4 different perspectives:
-<ul>
-<li>Issue simply the command <code>cats</code> at the console – What generally happens when you simply use an object’s name as command?</li>
-<li>Using the functions <code>head</code> and <code>tail</code>. Inform yourself beforehand what these functions do (again, using the help system).</li>
-<li>Using RStudios <code>View</code> function (use the function from the console and also check out the small table icon in the “Environment” tab in the top right pane)</li>
-</ul></li>
-<li>Construct a <em>scatter plot</em> of the data using <code>qplot</code> from the <em>ggplot2</em> package (incl. in <em>tidyverse</em>)
-<ul>
-<li>inform yourself on the Web, about what a scatter plot is</li>
-<li>see the documentation for <code>qplot</code> in R’s help system</li>
-<li>plot <code>Bwt</code> (body weight) on the x-axis and <code>Hwt</code> (heart weight) on the y-axis</li>
-<li>Hint: a scatterplot can be generated with a command like this:</li>
-<li><code>qplot(&lt;VARIABLE ON X&gt;, &lt;VARIABLE ON Y&gt;, data = &lt;DATASET&gt;)</code></li>
-</ul></li>
+<li>Complete exercises 1 to 3 from <a href="http://r4ds.had.co.nz/transform.html#exercises-7">section 5.2.4 in <em>R for Data Science</em></a>. <strong>For exercise 1, choose only 3 out of the 7 tasks (you can choose any task you want).</strong></li>
+<li>Complete exercises 1 to 3 from <a href="http://r4ds.had.co.nz/transform.html#exercises-8">section 5.3.1 in <em>R for Data Science</em></a></li>
+<li>Complete exercises 1 and 2 from <a href="http://r4ds.had.co.nz/transform.html#exercises-9">section 5.4.1 in <em>R for Data Science</em></a></li>
+<li>Download and unzip <code>05transform1-resources.zip</code> from the <a href="https://wzbsocialsciencecenter.github.io/wzb_r_tutorial/">course website</a>, read <code>codebook.txt</code> and complete the following tasks:
+<ol style="list-style-type: decimal">
+<li>Load the CSV file <code>schulen_potsdam.csv</code> into R without specifying further parameters for <code>read.csv()</code>. Have a look at the data using functions like <code>str()</code> and <code>head()</code>. Do you spot any potential problems?</li>
+<li>Load the data again, this time specifying two additional parameters for <code>read.csv()</code>: <code>stringsAsFactors = FALSE, colClasses = c(plz = &quot;character&quot;)</code>. Inspect the result. What is the effect of these parameters? Are all problems now fixed and do the variable types match the specifications in the codebook (see <code>codebook.txt</code> also contained in the zip-file)? If not, convert these variables to the correct data type using <code>mutate()</code> and <code>as.factor()</code>.</li>
+<li>Create a new variable <code>full_address</code> using <code>mutate()</code>. This new variable should contain the full address consisting of street name, zip code and city name, e.g. <em>“Carl-von-Ossietzky-Straße 37 01570 Potsdam”</em>. You can combine several strings to form one string using the function <code>paste()</code>.</li>
+</ol></li>
+<li><strong>Optional</strong>: Complete exercises 1 and 2 from <a href="http://r4ds.had.co.nz/transform.html#exercises-10">section 5.5.2 in <em>R for Data Science</em></a></li>
 </ol>
 </div>
 

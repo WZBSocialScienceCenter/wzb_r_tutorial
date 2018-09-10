@@ -11,7 +11,7 @@
 
 <meta name="author" content="Markus Konrad" />
 
-<meta name="date" content="2018-10-25" />
+<meta name="date" content="2018-11-01" />
 
 <title>R Tutorial at the WZB</title>
 
@@ -123,9 +123,9 @@ $(document).ready(function () {
 
 
 <h1 class="title toc-ignore">R Tutorial at the WZB</h1>
-<h3 class="subtitle"><em>Tasks for session 1 - Introduction</em></h3>
+<h3 class="subtitle"><em>Task for session 2 - R Basics I</em></h3>
 <h4 class="author"><em>Markus Konrad</em></h4>
-<h4 class="date"><em>October 25, 2018</em></h4>
+<h4 class="date"><em>November 01, 2018</em></h4>
 
 </div>
 
@@ -133,25 +133,70 @@ $(document).ready(function () {
 <div id="tasks" class="section level2">
 <h2>Tasks</h2>
 <ol style="list-style-type: decimal">
-<li>Install the package <em>MASS</em></li>
-<li>Load the packages <em>MASS</em> and <em>tidyverse</em>. Loading these packages will produce some messages on the console. What do you think do they mean? (If you don’t know, just make a wild guess!)</li>
-<li>Load the builtin dataset “cats” provided by the package MASS (Hint: Run <code>data(cats)</code> to load the data)</li>
-<li>Inform yourself about the data using R’s help system – What are the variables in the dataset?</li>
-<li>View the data using 4 different perspectives:
-<ul>
-<li>Issue simply the command <code>cats</code> at the console – What generally happens when you simply use an object’s name as command?</li>
-<li>Using the functions <code>head</code> and <code>tail</code>. Inform yourself beforehand what these functions do (again, using the help system).</li>
-<li>Using RStudios <code>View</code> function (use the function from the console and also check out the small table icon in the “Environment” tab in the top right pane)</li>
-</ul></li>
-<li>Construct a <em>scatter plot</em> of the data using <code>qplot</code> from the <em>ggplot2</em> package (incl. in <em>tidyverse</em>)
-<ul>
-<li>inform yourself on the Web, about what a scatter plot is</li>
-<li>see the documentation for <code>qplot</code> in R’s help system</li>
-<li>plot <code>Bwt</code> (body weight) on the x-axis and <code>Hwt</code> (heart weight) on the y-axis</li>
-<li>Hint: a scatterplot can be generated with a command like this:</li>
-<li><code>qplot(&lt;VARIABLE ON X&gt;, &lt;VARIABLE ON Y&gt;, data = &lt;DATASET&gt;)</code></li>
-</ul></li>
+<li>Install SWIRL courses that we’ll need for the next sessions. You should already have installed the package <em>swirl</em>. If not, you need to do that first (see previous session’s slides). Next, install the interactive R courses as described <strong>on the next slide</strong>.</li>
+<li>Complete <strong>lessons 1 and 4</strong> of SWIRL Course <strong>“R Programming”</strong>. Lesson 3 is optional, lesson 2 should be skipped.</li>
+<li>Take a look at the last 5 tweets of <a href="https://twitter.com/WZB_Berlin">WZB_Berlin</a>
+<ol style="list-style-type: decimal">
+<li>Create two vectors <code>retweets</code> and <code>likes</code> that contain the respective numbers from the last 5 tweets</li>
+<li>Create a third vector <code>tweet_ids</code> that contains the numbers 1 to 5 as identifiers for the tweets</li>
+<li>Check the data type of all three vectors using the function <code>class(...)</code></li>
+<li>Look at 5 more tweets, append the respective data to the vectors</li>
+<li>Create a dataframe <code>tweetstats</code> from the three vectors</li>
+<li>Add an additional variable/column to <code>tweetstats</code> named <code>interactions</code> which is the sum of retweets and likes for each observation</li>
+</ol></li>
 </ol>
+<ol start="4">
+<li>
+As in the previous session’s tasks, we’ll work with the <code>cats</code> dataset from the package <em>MASS</em>.
+</li>
+<ol>
+<li>
+Load the package and the dataset.
+</li>
+<li>
+How do you bring up the dataset documentation / help for the dataset?
+</li>
+<li>
+Identify the number of rows and columns in the dataset by using the respective R functions.
+</li>
+<li>
+Identify the column names using the respective R function.
+</li>
+<li>
+What are the data types of the columns in the dataset? Again, use <code>class(...)</code> to answer this question.
+</li>
+<li>
+What if you recorded two more variables: Age and whether the cat has heart problems. Which data types would you choose for each variable?
+</li>
+<li>
+Create a new column <code>wt_ratio</code> which is the ratio of heart and body weight. Make sure to bring both variables to a common unit of measurement (i.e. both in grams or kilograms).
+</li>
+</ol>
+</div>
+<div id="notes-on-installing-swirl-courses" class="section level2">
+<h2>Notes on installing SWIRL courses</h2>
+<p>First, load the package:</p>
+<pre class="r"><code>library(swirl)</code></pre>
+<p>If an error message shows up, then you probably didn’t install the package. You need to do this first with the command <code>install.packages('swirl')</code>.</p>
+<p>Next, install three courses with the follwing commands (see next slide, in case one of this commands fails):</p>
+<pre class="r"><code>install_course_github(&quot;swirldev&quot;, &quot;R Programming&quot;)
+install_course_github(&quot;swirldev&quot;, &quot;Getting and Cleaning Data&quot;)
+install_course_github(&quot;swirldev&quot;, &quot;Exploratory Data Analysis&quot;)</code></pre>
+<p>You can start SWIRL with the following command which will guide you through the first steps:</p>
+<pre class="r"><code>swirl()</code></pre>
+<p><strong>One additional note:</strong> When you receive the question <em>“Would you like to receive credit for completing this course on Coursera.org?”</em>, select “No”.</p>
+<p><strong>In case installing a SWIRL course fails, do the follwing:</strong></p>
+<ol style="list-style-type: decimal">
+<li>Download the ZIP file <code>swirl_courses-master.zip</code> from the following address: <a href="https://github.com/swirldev/swirl_courses/archive/master.zip" class="uri">https://github.com/swirldev/swirl_courses/archive/master.zip</a></li>
+<li>Move this file to your current working directory (you can find that out via <code>getwd()</code>).</li>
+<li>Execute the following commands:</li>
+</ol>
+<pre class="r"><code>install_course_zip(&quot;swirl_courses-master.zip&quot;, multi=TRUE,
+                   which_course = &quot;R Programming&quot;)
+install_course_zip(&quot;swirl_courses-master.zip&quot;, multi=TRUE,
+                   which_course = &quot;Getting and Cleaning Data&quot;)
+install_course_zip(&quot;swirl_courses-master.zip&quot;, multi=TRUE,
+                   which_course = &quot;Exploratory Data Analysis&quot;)</code></pre>
 </div>
 
 
