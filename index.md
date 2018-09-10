@@ -1,5 +1,10 @@
 # R Tutorial at the WZB
 
+Instructor: Markus Konrad <markus.konrad@wzb.eu>, Wissenschaftszentrum Berlin für Sozialforschung (WZB)
+
+This tutorial course accompanies the lecture "Studying Social Stratification with Big Data" (Hipp, Ulbricht) in winter semester 2018 at University Potsdam.
+
+
 ## Study material
 
 ### 1 – Introduction
