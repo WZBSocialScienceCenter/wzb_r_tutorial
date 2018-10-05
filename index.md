@@ -56,3 +56,22 @@ November 22, 2018
 * [Tasks](tasks_and_solutions/05transform1_tasks.html)
 
 
+### 6 - Recap / Transforming data with R II
+
+November 29, 2018
+
+* [Slides](slides/06transform2.html)
+* [Slides PDF](slides/06transform2.pdf)
+* [05transform1-resources.zip (additional resources / data files)](slides/05transform1-resources.zip)
+* [Tasks](tasks_and_solutions/06transform2_tasks.html)
+
+
+### 6 - Reshaping data / plotting with ggplot2
+
+November 29, 2018
+
+* [Slides](slides/06transform2.html)
+* [Slides PDF](slides/06transform2.pdf)
+* [Tasks](tasks_and_solutions/06transform2_tasks.html)
+
+
