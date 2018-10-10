@@ -74,3 +74,13 @@ December 06, 2018
 * [Tasks](tasks_and_solutions/07plotting_tasks.html)
 
 
+### 8 - Record linkage
+
+December 13, 2018
+
+* [Slides](slides/08linkage.html)
+* [Slides PDF](slides/08linkage.pdf)
+* [08linkage-resources.zip (additional resources / data files)](slides/08linkage-resources.zip)
+* [Tasks](tasks_and_solutions/08linkage.html)
+
+
