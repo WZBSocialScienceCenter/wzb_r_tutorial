@@ -174,8 +174,13 @@ $(document).ready(function () {
 <div id="anatomy-of-a-function-call" class="section level3 build">
 <h3><span class="header-section-number">1.1.1</span> Anatomy of a function call</h3>
 <pre class="r"><code>y &lt;- some_func(x1, x2)</code></pre>
-<p>There are three components: 1. <code>some_func</code>: function name 2. <code>x1, x2</code>: function <strong>arguments</strong> (a.k.a. <strong>parameters</strong>) 3. <strong>return value</strong> (here, directly assigned to object <code>y</code>)</p>
-<p>The only component that is obligatory, is the function name (this means, functions can have no arguments and/or return “nothing”). We can use (also: <em>call</em>) already defined functions (from base R or loaded packages) or define our own functions. We’ll focus on the first in this session.</p>
+<p>There are three components:</p>
+<ol style="list-style-type: decimal">
+<li><code>some_func</code>: function name</li>
+<li><code>x1, x2</code>: function <strong>arguments</strong> (a.k.a. <strong>parameters</strong>)</li>
+<li><strong>return value</strong> (here, directly assigned to object <code>y</code>)</li>
+</ol>
+<p>The only component that is obligatory is the function name (this means functions can have no arguments and/or return “nothing”). We can use (also: <em>call</em>) already defined functions (from base R or loaded packages) or define our own functions. We’ll focus on the first in this session.</p>
 </div>
 <div id="function-arguments" class="section level3">
 <h3><span class="header-section-number">1.1.2</span> Function arguments</h3>
@@ -192,7 +197,7 @@ $(document).ready(function () {
 <p>Remember:</p>
 <ul>
 <li>an assignment to an object is made with <code>&lt;-</code></li>
-<li>assigning a default value to a function argument is made with <code>=</code></li>
+<li>assigning a value to a named function argument is made with <code>=</code></li>
 </ul>
 <p><strong>So don’t do this: <code>mean(x, na.rm &lt;- TRUE)</code>!</strong></p>
 </div>
@@ -220,25 +225,28 @@ sort(values, TRUE)</code></pre>
 <div id="example-of-a-function-call" class="section level2">
 <h2><span class="header-section-number">1.2</span> Example of a function call</h2>
 <p>Example data: All ozone observations from built-in <code>airquality</code> dataset.</p>
-<pre class="r"><code>airquality$Ozone
-## [1]  41  36  12  18  NA  28  23  19   8 ...</code></pre>
+<pre class="r"><code>airquality$Ozone</code></pre>
+<pre><code>##  [1]  41  36  12  18  NA  28  23  19   8  NA   7  16  11  14  18  14  34
+## [18]   6  30  11   1  11   4  32  NA  NA  NA  23  45 115  37  NA  NA  NA
+## [35]  NA  NA  NA  29  NA  71  39  NA  NA  23  NA  NA  21  37  20  12
+##  [ reached getOption(&quot;max.print&quot;) -- omitted 103 entries ]</code></pre>
 <p>Passing the whole “Ozone” <em>vector</em>:</p>
-<pre class="r"><code>mean(airquality$Ozone)
-## [1] NA</code></pre>
+<pre class="r"><code>mean(airquality$Ozone)</code></pre>
+<pre><code>## [1] NA</code></pre>
 <p>Here, <code>mean(...)</code> returns <code>NA</code> because all calculations that involve a <code>NA</code> value by default result in <code>NA</code>. So we should specify to <em>remove NAs</em> before calculation using the <code>na.rm</code> argument of <code>mean(...)</code>:</p>
-<pre class="r"><code>mean(airquality$Ozone, na.rm = TRUE)
-## [1] 42.12931</code></pre>
-<p>Which is equivalent to (passing all arguments in order):</p>
-<pre class="r"><code>mean(airquality$Ozone, 0, TRUE)
-## [1] 42.12931</code></pre>
+<pre class="r"><code>mean(airquality$Ozone, na.rm = TRUE)</code></pre>
+<pre><code>## [1] 42.12931</code></pre>
+<p>Which is equivalent to the following (passing all arguments in order):</p>
+<pre class="r"><code>mean(airquality$Ozone, 0, TRUE)</code></pre>
+<pre><code>## [1] 42.12931</code></pre>
 </div>
 <div id="nesting-function-calls" class="section level2">
 <h2><span class="header-section-number">1.3</span> Nesting function calls</h2>
 <p>You can directly send the result <em>(output)</em> of one function as input to the next function <em>(nesting functions)</em>.</p>
-<p>Here we identify <code>NA</code> values which produces a logical vector, an then pass this vector to <code>sum()</code>, effectively counting the missing values:</p>
+<p>Here, we identify <code>NA</code> values, which produces a logical vector, and then pass this vector to <code>sum()</code>. This effectively counts the missing values:</p>
 <pre class="r"><code>sum(is.na(airquality$Ozone))</code></pre>
 <pre><code>## [1] 37</code></pre>
-<p>Note the nested parantheses. For each opening paranthesis, there <em>must</em> be a closing counterpart. Nested functions are evaluated from inner to outer.</p>
+<p>Note the nested parantheses. For each opening paranthesis there <em>must</em> be a closing counterpart. Nested functions are evaluated from inner to outer.</p>
 <p>So <code>sum(is.na(airquality$Ozone))</code> is the same as:</p>
 <pre class="r"><code>ozone_NAs &lt;- is.na(airquality$Ozone)
 ## [1] FALSE FALSE FALSE FALSE  TRUE FALSE FALSE ...</code></pre>
@@ -339,7 +347,7 @@ country &lt;- factor(c('USA', 'GB', 'GB', 'DE', 'USA'))</code></pre>
 <p>You will usually compare a vector of values with a single scalar value as in the above example. In this case, each value in the vector is compared to the scalar vector (<code>20</code> in the above example). Another common operation is that you compare two vectors of the same size, for example:</p>
 <pre class="r"><code>age == c(20, 35, 19, 51, 22)</code></pre>
 <pre><code>## [1]  TRUE  TRUE  TRUE  TRUE FALSE</code></pre>
-<p>Here, each vector element on the left side is directly compared with its companion element on the right side. Watch out when comparing vectors of different sizes. For this, the resul of vector recycling (see last session) apply.</p>
+<p>Here, each vector element on the left side is directly compared with its companion element on the right side. Watch out when comparing vectors of different sizes. For this, the rules of vector recycling (see last session) apply.</p>
 <div class="warning">
 <p>A very common mistake for beginners is to accidently use only a single equals sign <code>=</code> instead of double equals signs <code>==</code>. <strong>If you do this, you will accidently reassign a new value to the variable!</strong></p>
 <pre class="r"><code>age = 20
@@ -375,6 +383,8 @@ country &lt;- factor(c('USA', 'GB', 'GB', 'DE', 'USA'))</code></pre>
 <pre><code>## [1]  TRUE  TRUE FALSE  TRUE FALSE</code></pre>
 <pre class="r"><code>!smoker</code></pre>
 <pre><code>## [1] FALSE FALSE  TRUE FALSE  TRUE</code></pre>
+<pre class="r"><code>!(age &gt; 19)    # logically equivalent to &quot;age &lt;= 19&quot;</code></pre>
+<pre><code>## [1] FALSE FALSE  TRUE FALSE FALSE</code></pre>
 </div>
 <div id="gotchas" class="section level3">
 <h3><span class="header-section-number">3.1.4</span> Gotchas</h3>
@@ -456,7 +466,7 @@ Source: R for Data Science, G. Grolemund, H. Wickham
 <pre><code>## [1]  TRUE FALSE  TRUE FALSE  TRUE</code></pre>
 <pre class="r"><code>country == 'GB'   # this is logical vector y</code></pre>
 <pre><code>## [1] FALSE  TRUE  TRUE FALSE FALSE</code></pre>
-<p>Considering the definition of logical OR above, which elements will the expression <span class="math inline">\((age &lt; 30) \text{ OR } (country = \text{GB})\)</span> become <code>TRUE</code>?</p>
+<p>Considering the definition of logical OR above, for which elements will the expression <span class="math inline">\((age &lt; 30) \text{ OR } (country = \text{GB})\)</span> become <code>TRUE</code>?</p>
 <p>We see that only the fourth elements in both logical vectors are <code>FALSE</code>, all others have at least one <code>TRUE</code> on one side. This means that only the fourth element in the result vector is <code>FALSE</code>, all others <code>TRUE</code>:</p>
 <pre class="r"><code>age &lt; 30 | country == 'GB'</code></pre>
 <pre><code>## [1]  TRUE  TRUE  TRUE FALSE  TRUE</code></pre>
