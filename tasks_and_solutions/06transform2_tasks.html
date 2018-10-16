@@ -11,7 +11,7 @@
 
 <meta name="author" content="Markus Konrad" />
 
-<meta name="date" content="2018-11-22" />
+<meta name="date" content="2018-11-29" />
 
 <title>R Tutorial at the WZB</title>
 
@@ -123,9 +123,9 @@ $(document).ready(function () {
 
 
 <h1 class="title toc-ignore">R Tutorial at the WZB</h1>
-<h3 class="subtitle"><em>Tasks for session 6 - Transforming data with R I</em></h3>
+<h3 class="subtitle"><em>Tasks for session 6 - Recap / Transforming data with R II</em></h3>
 <h4 class="author"><em>Markus Konrad</em></h4>
-<h4 class="date"><em>November 22, 2018</em></h4>
+<h4 class="date"><em>November 29, 2018</em></h4>
 
 </div>
 
@@ -144,7 +144,7 @@ $(document).ready(function () {
  3 Arizona     FALSE        FALSE        
  4 Arkansas    FALSE        TRUE         
  5 California  TRUE         FALSE</code></pre>
-<p><strong>1.c)</strong> From the output of the previous task, select those states, where the votes diverged but the party membership of both senators did not differ. Save the output vector of those state names in an object named <code>div_votes_states</code> (Hint: You can convert single column of a data frame to a vector using <code>unlist()</code>: <code>... %&gt;% select(state.name) %&gt;% unlist()</code>). Using <code>div_votes_states</code>, filter the observations of <code>iraqVote</code> to get only the observations from the states listed in <code>div_votes_states</code>. Are there any Republicans in this list?</p>
+<p><strong>1.c)</strong> From the output of the previous task, select those states, where the votes diverged but the party membership of both senators did not differ. Save the output vector of those state names in an object named <code>div_votes_states</code> (Hint: You can convert a single column of a data frame to a vector using <code>unlist()</code>: <code>... %&gt;% select(state.name) %&gt;% unlist()</code>). Using <code>div_votes_states</code>, filter the observations of <code>iraqVote</code> to get only the observations from the states listed in <code>div_votes_states</code>. Are there any Republicans in this list?</p>
 <p><strong>2.</strong> Load the data set <code>politicalInformation</code> that is also available from the package <em>pscl</em> and view its documentation. Then, solve the following tasks:</p>
 <p><strong>2.a)</strong> Create a new data set <code>polinf</code> based on <code>politicalInformation</code> but with a new variable <code>age_group</code>. This variable assigns each participant an age category according to the following age ranges:</p>
 <ul>
@@ -159,7 +159,7 @@ $(document).ready(function () {
     between(age, 29, 45) ~ 'adult',
     # ...
   ))</code></pre>
-<p><strong>2.b)</strong> Filter <code>group_inf</code> to only include non-NA values in <code>age_group</code>. Then group by <code>age_group</code> and <code>collageDegree</code>. Compute the mean of the interviewer rating <code>y</code> and indicate the number of non-NA values in <code>y</code> for each group.</p>
+<p><strong>2.b)</strong> Filter <code>polinf</code> to only include non-NA values in <code>age_group</code>. Then group by <code>age_group</code> and <code>collageDegree</code>. Compute the mean of the interviewer rating <code>y</code> and indicate the number of non-NA values in <code>y</code> for each group.</p>
 <p><strong>3.</strong> Load the data set <code>flights</code> from the package <em>nycflights13</em>.</p>
 <p><strong>3.a)</strong> Find out the number of carrier companies in the data set (Hint: You can use <code>unique()</code> or <code>distinct()</code> for that).</p>
 <p><strong>3.b)</strong> Find out the three longest flights (in terms of <code>air_time</code>) for each carrier. Construct a single command combined with <code>%&gt;%</code>-operators. You can use <code>rank()</code> to rank observations according to a variable and then <code>filter()</code> only for the ranks 1 to 3.</p>
