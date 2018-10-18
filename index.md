@@ -15,6 +15,7 @@ October 25, 2018
 * [Slides PDF](slides/01intro.pdf)
 * [Tasks](tasks_and_solutions/01intro_tasks.html)
 
+
 ### 2 – R Basics I
 
 November 01, 2018
@@ -22,6 +23,7 @@ November 01, 2018
 * [Slides](slides/02rbasics1.html)
 * [Slides PDF](slides/02rbasics1.pdf)
 * [Tasks](tasks_and_solutions/02rbasics1_tasks.html)
+
 
 ### 3 – R Basics II
 
@@ -33,6 +35,7 @@ November 08, 2018
 * [Self-study material PDF](slides/03rbasics2.pdf)
 * [Tasks](tasks_and_solutions/03rbasics2_tasks.html)
 
+
 ### 4 – R Basics III
 
 November 15, 2018
@@ -43,6 +46,7 @@ November 15, 2018
 * [Self-study material PDF](slides/04rbasics3.pdf)
 * [04rbasics3-resources.zip (additional resources / data files)](slides/04rbasics3-resources.zip)
 * [Tasks](tasks_and_solutions/04rbasics3_tasks.html)
+
 
 ### 5 - Transforming data with R I
 
@@ -72,6 +76,19 @@ December 06, 2018
 * [Slides](slides/07plotting.html)
 * [Slides PDF](slides/07plotting.pdf)
 * [Tasks](tasks_and_solutions/07plotting_tasks.html)
+
+
+### 8 - Text mining I
+
+December 13, 2018
+
+*In preparation.*
+
+### 9 - "Stand-by session"
+
+December 20, 2018
+
+*On this date, we'll only have a tutorial session in case we need to catch up with some learning material. I'll annouce that the week before.*
 
 
 ### 10 - Record linkage
