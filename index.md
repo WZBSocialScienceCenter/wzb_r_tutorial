@@ -101,3 +101,22 @@ January 10, 2019
 * [Tasks](tasks_and_solutions/10linkage.html)
 
 
+### 11 - tba.
+
+January 17, 2019
+
+
+### 12 - tba.
+
+January 24, 2019
+
+
+### 13 - tba.
+
+January 31, 2019
+
+
+### 14 - tba.
+
+February 7, 2019
+
