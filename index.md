@@ -14,6 +14,7 @@ October 25, 2018
 * [Slides](slides/01intro.html)
 * [Slides PDF](slides/01intro.pdf)
 * [Tasks](tasks_and_solutions/01intro_tasks.html)
+* [Solutions](tasks_and_solutions/01intro_tasks_solved.html)
 
 
 ### 2 – R Basics I
