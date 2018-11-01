@@ -24,6 +24,7 @@ November 01, 2018
 * [Slides](slides/02rbasics1.html)
 * [Slides PDF](slides/02rbasics1.pdf)
 * [Tasks](tasks_and_solutions/02rbasics1_tasks.html)
+* [Solutions](tasks_and_solutions/02rbasics1_tasks_solved.html)
 
 
 ### 3 – R Basics II
@@ -35,6 +36,7 @@ November 08, 2018
 * [Self-study material](slides/03rbasics2.html)
 * [Self-study material PDF](slides/03rbasics2.pdf)
 * [Tasks](tasks_and_solutions/03rbasics2_tasks.html)
+* [Solutions](tasks_and_solutions/03rbasics2_tasks_solved.html)
 
 
 ### 4 – R Basics III
@@ -47,6 +49,7 @@ November 15, 2018
 * [Self-study material PDF](slides/04rbasics3.pdf)
 * [04rbasics3-resources.zip (additional resources / data files)](slides/04rbasics3-resources.zip)
 * [Tasks](tasks_and_solutions/04rbasics3_tasks.html)
+* [Solutions](tasks_and_solutions/04rbasics3_tasks_solved.html)
 
 
 ### 5 - Transforming data with R I
@@ -59,6 +62,7 @@ November 22, 2018
 * [Self-study material PDF](slides/05transform1.pdf)
 * [05transform1-resources.zip (additional resources / data files)](slides/05transform1-resources.zip)
 * [Tasks](tasks_and_solutions/05transform1_tasks.html)
+* [Solutions](tasks_and_solutions/05transform1_tasks_solved.html)
 
 
 ### 6 - Recap / Transforming data with R II
