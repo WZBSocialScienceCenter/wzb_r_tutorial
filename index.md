@@ -87,7 +87,11 @@ December 06, 2018
 
 December 13, 2018
 
-*In preparation.*
+* [Slides](slides/08textmining.html)
+* [Slides PDF](slides/08textmining.pdf)
+* [08textmining-resources.zip (additional resources / data files)](slides/08textmining-resources.zip)
+* [Tasks](tasks_and_solutions/08textmining_tasks.html)
+
 
 ### 9 - "Stand-by session"
 
