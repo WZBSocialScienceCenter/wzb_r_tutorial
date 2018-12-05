@@ -72,6 +72,7 @@ November 29, 2018
 * [Slides](slides/06transform2.html)
 * [Slides PDF](slides/06transform2.pdf)
 * [Tasks](tasks_and_solutions/06transform2_tasks.html)
+* [Solutions](tasks_and_solutions/06transform2_tasks_solved.html)
 
 
 ### 7 - Reshaping data / plotting with ggplot2
