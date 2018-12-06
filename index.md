@@ -83,6 +83,8 @@ December 06, 2018
 * [Slides PDF](slides/07plotting.pdf)
 * [Tasks](tasks_and_solutions/07plotting_tasks.html)
 
+* [Further explanation: Long vs. Wide](special/longvswide.html)
+
 
 ### 8 - Text mining I
 
