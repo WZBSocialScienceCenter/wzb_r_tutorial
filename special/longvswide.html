@@ -129,8 +129,9 @@ $(document).ready(function () {
 
 <div id="TOC">
 <ul>
-<li><a href="#using-the-data-as-is">1. Using the data as is</a></li>
-<li><a href="#creating-a-long-table-format">2. Creating a long table format</a></li>
+<li><a href="#a-dangerous-approach">1. A dangerous approach</a></li>
+<li><a href="#a-not-so-dangerous-approach">2. A not so dangerous approach</a></li>
+<li><a href="#creating-a-long-table-format">3. Creating a long table format</a></li>
 <li><a href="#plotting">3. Plotting</a></li>
 </ul>
 </div>
@@ -184,10 +185,11 @@ OBrienKaiser</code></pre>
 <p>Let’s make a copy of the original data at first (this way, we can also use a shorter name):</p>
 <pre class="r"><code>obk &lt;- OBrienKaiser</code></pre>
 <p><strong>Our goal is to compute the mean per treatment and measurement type (pre, post, follow-up – “fup”).</strong></p>
-<div id="using-the-data-as-is" class="section level2">
-<h2>1. Using the data as is</h2>
-<p>Taken the data as is, we could at first calculate a mean per subject for each measurement type.</p>
-<pre class="r"><code>(obk$pre.1 + obk$pre.2 + obk$pre.3 + obk$pre.4 + obk$pre.5) / 5</code></pre>
+<div id="a-dangerous-approach" class="section level2">
+<h2>1. A dangerous approach</h2>
+<p>Taken the data as is, you could be tempted to calculate a mean per subject for each measurement type first. I’m saying “tempted” because this approach can lead to some serious problems as I will explain below. Anyway, I’d like to proceed with the calculation:</p>
+<pre class="r"><code># means for all &quot;pretest&quot; measurements per subject (16 values -- one for each subject)
+(obk$pre.1 + obk$pre.2 + obk$pre.3 + obk$pre.4 + obk$pre.5) / 5</code></pre>
 <pre><code>##  [1] 2 4 6 5 4 8 5 3 4 4 3 6 6 2 3 5</code></pre>
 <p>This is a bit cumbersome. We can also select the “pre…” columns by index (columns 3 to 7) and calculate the row-wise sum and divide by 5:</p>
 <pre class="r"><code>obk$pre_avg &lt;- rowSums(obk[3:7]) / 5
@@ -215,7 +217,7 @@ obk$fup_avg &lt;- rowSums(obk[13:17]) / 5</code></pre>
 ## 14         B      F       2        5       6
 ## 15         B      F       3        7       7
 ## 16         B      F       5        7       8</code></pre>
-<p>Let’s calculate the result:</p>
+<p>You would now take the mean of those per-subject-means for each treatment. This is, we take the mean of means and you might already hear the alarm bells ringing… Anyway, let’s calculate the result:</p>
 <pre class="r"><code>group_by(obk, treatment) %&gt;% summarize(pretest_mean = mean(pre_avg),
                                        posttest_mean = mean(post_avg),
                                        fuptest_mean = mean(fup_avg))</code></pre>
@@ -225,7 +227,10 @@ obk$fup_avg &lt;- rowSums(obk[13:17]) / 5</code></pre>
 ## 1 control           4.2           4            4.4 
 ## 2 A                 5             6.5          7.25
 ## 3 B                 4.14          6.57         7.29</code></pre>
-<p>This works and the solution is not overly complicated. However, it has some drawbacks, especially with the calculation of the per-subject means (<code>pre_avg</code>, <code>post_avg</code>, <code>fup_avg</code>): First of all, you really have to watch out that you select the right columns when you do things like <code>rowSums(obk[3:7]) / 5</code>. <strong>However, the main concern here is that we calculate the “mean of means” which can be problematic. In fact, it is always problematic whenever you have different sample sizes across groups.</strong> See also this <a href="https://stats.stackexchange.com/questions/133138/will-the-mean-of-a-set-of-means-always-be-the-same-as-the-mean-obtained-from-the">explanation</a>. So if we just had a single <code>NA</code> value somewhere in our data, we would get biased results.</p>
+<p>This works and the output is correct. Furthermore, the solution is not overly complicated. However, it has some drawbacks, especially with the calculation of the per-subject means (<code>pre_avg</code>, <code>post_avg</code>, <code>fup_avg</code>): First of all, you really have to watch out that you select the right columns when you do things like <code>rowSums(obk[3:7]) / 5</code>. <strong>However, the main concern here is that we calculate the “mean of means” which can be problematic. In fact, it is always problematic whenever you have different sample sizes across groups.</strong> See also this <a href="https://stats.stackexchange.com/questions/133138/will-the-mean-of-a-set-of-means-always-be-the-same-as-the-mean-obtained-from-the">explanation</a>. In our case it works, because we always have five measurements for each subject. In the very most cases however, you will have some missings. <strong>If we just had a single <code>NA</code> value somewhere in our data, we would get biased results.</strong></p>
+</div>
+<div id="a-not-so-dangerous-approach" class="section level2">
+<h2>2. A not so dangerous approach</h2>
 <p>What you could do otherwise is calculating the means not per subject and measurement type, but per treatments and measurement type. You can do so by subsetting (filtering) per treatment first and then you get three datasets to which you apply the same calculations:</p>
 <pre class="r"><code>obk &lt;- OBrienKaiser   # original data set again
 
@@ -256,7 +261,7 @@ ctrl</code></pre>
 <p>By this, you can get around the “mean of means” problem but still I find it’s not very flexible (what if you also wanted to split groups by <code>gender</code> for example?) and also it leads to a lot of code repetition (always a bad sign!).</p>
 </div>
 <div id="creating-a-long-table-format" class="section level2">
-<h2>2. Creating a long table format</h2>
+<h2>3. Creating a long table format</h2>
 <p>I find it easier to work with a long table format in such circumstances. Also, only this allows us to use <em>ggplot2</em> later for plotting, as it expects the data to be in this format.</p>
 <p>Let’s re-assign the original data set:</p>
 <pre class="r"><code>obk &lt;- OBrienKaiser</code></pre>
@@ -304,7 +309,7 @@ obk_tidy &lt;- gather(obk, pre.1:fup.5, key = 'meas_type_occasion', value = 'val
     separate(meas_type_occasion, into = c('meas_type', 'meas_occasion')) %&gt;%
     mutate(meas_type = factor(meas_type, levels = c('pre', 'post', 'fup')),
            meas_occasion = as.integer(meas_occasion)) %&gt;%
-    arrange(id, meas_type)
+    arrange(id, meas_type)  # reorder to better see each subject's measurements
 
 obk_tidy</code></pre>
 <pre><code>##     treatment gender id meas_type meas_occasion value
@@ -589,8 +594,9 @@ obk_tidy</code></pre>
 ## 16 B         post      M       7            15
 ## 17 B         fup       F       7.25         20
 ## 18 B         fup       M       7.33         15</code></pre>
-<p>Using <code>spread</code> we can also convert the data to different format again. In the following format, we have columns for each measurment type (pre, post, fup) which contain values for each measurment occasion (five per subject). I believe that this is the format that Maja meant today when she talked about how she would transform the data in Stata.</p>
-<pre class="r"><code>obk_tidy %&gt;% spread(meas_type, value) %&gt;% arrange(id, meas_occasion)</code></pre>
+<p>Using <code>spread</code> we can also convert the data to a different format again. In the following format, we have columns for each measurment type (pre, post, fup) which contain values for each measurment occasion (five per subject). I believe that this is the format that Maja meant today when she talked about how she would transform the data in Stata.</p>
+<pre class="r"><code>obk_tidy2 &lt;- obk_tidy %&gt;% spread(meas_type, value) %&gt;% arrange(id, meas_occasion)
+obk_tidy2</code></pre>
 <pre><code>##    treatment gender id meas_occasion pre post fup
 ## 1    control      M  1             1   1    3   2
 ## 2    control      M  1             2   2    2   3
@@ -672,6 +678,17 @@ obk_tidy</code></pre>
 ## 78         B      F 16             3   7    8  10
 ## 79         B      F 16             4   5    6   8
 ## 80         B      F 16             5   4    7   7</code></pre>
+<p>This format is also fine to work with! I think it’s mainly a matter of taste or habits. Again, let’s calculate the means per treatment and for each measurement type:</p>
+<pre class="r"><code>obk_tidy2 %&gt;% group_by(treatment) %&gt;%
+    summarize(mean_pre = mean(pre, na.rm = TRUE),
+              mean_post = mean(post, na.rm = TRUE),
+              mean_fup = mean(fup, na.rm = TRUE))</code></pre>
+<pre><code>## # A tibble: 3 x 4
+##   treatment mean_pre mean_post mean_fup
+##   &lt;fct&gt;        &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+## 1 control       4.2       4        4.4 
+## 2 A             5         6.5      7.25
+## 3 B             4.14      6.57     7.29</code></pre>
 </div>
 <div id="plotting" class="section level2">
 <h2>3. Plotting</h2>
