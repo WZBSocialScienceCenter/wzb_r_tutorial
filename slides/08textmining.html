@@ -476,6 +476,15 @@ matrix(1:6, nrow = 2, ncol = 3, byrow = TRUE)</pre>
 ## [1,] 0.1666667 0.3333333  0.5
 ## [2,] 0.2666667 0.3333333  0.4</pre>
 
+<p>Transpose:</p>
+
+<pre class = 'prettyprint lang-r'>t(A)</pre>
+
+<pre >##      [,1] [,2]
+## [1,]    1    4
+## [2,]    2    5
+## [3,]    3    6</pre>
+
 </article></slide><slide class=""><hgroup><h2>Row and column names for matrix</h2></hgroup><article  id="row-and-column-names-for-matrix" class="build smaller">
 
 <p>As with data frames, row names and column names can optionally be set via <code>rownames()</code> and <code>colnames()</code>:</p>
@@ -1105,7 +1114,7 @@ The evil Evil of the most Evil.
 
 </article></slide><slide class=""><hgroup><h2>The English Europarl corpus</h2></hgroup><article  id="the-english-europarl-corpus" class="smaller build">
 
-<p>We load a sample of the <a href='http://www.statmt.org/europarl/' title=''>European Parliament Proceedings Parallel Corpus</a> with English texts:</p>
+<p>We load a sample of the <a href='http://www.statmt.org/europarl/' title=''>European Parliament Proceedings Parallel Corpus</a> with English texts. If you want to follow along, download <a href='https://wzbsocialsciencecenter.github.io/wzb_r_tutorial/#8---text-mining-i' title=''>&quot;08textmining-resource.zip&quot; from the tutorial website</a>.</p>
 
 <pre class = 'prettyprint lang-r'>library(tm)
 
@@ -1218,7 +1227,7 @@ europarl</pre>
 
 <ol>
 <li>&quot;We can&#39;t explain what we don&#39;t know.&quot;</li>
-<li>&quot;We cannot be wrong. We do not accept that.&quot;</li>
+<li>&quot;We cannot do that. We do not want that.&quot;</li>
 </ol>
 
 <ul>
@@ -1300,45 +1309,45 @@ europarl</pre>
 <li>parameter <code>control</code>: adjust the transformation from corpus to DTM
 
 <ul>
-<li>here: allow words of all lengths</li>
+<li>here: allow words that are at least 2 characters long</li>
 <li>by default, words with less than 3 characters would be removed</li>
 </ul></li>
 </ul>
 
 <pre class = 'prettyprint lang-r'>dtm &lt;- DocumentTermMatrix(europarl,
-                          control = list(wordLengths = c(0, Inf)))
+                          control = list(wordLengths = c(2, Inf)))
 inspect(dtm)</pre>
 
-<pre >## &lt;&lt;DocumentTermMatrix (documents: 10, terms: 14137)&gt;&gt;
-## Non-/sparse entries: 42989/98381
+<pre >## &lt;&lt;DocumentTermMatrix (documents: 10, terms: 14118)&gt;&gt;
+## Non-/sparse entries: 42920/98260
 ## Sparsity           : 70%
 ## Maximal term length: 24
 ## Weighting          : term frequency (tf)
 ## Sample             :
 ##                 Terms
-## Docs             also commission european  mr must parliament president
-##   ep-00-01-17.en   82        130       93 128   53         79        89
-##   ep-00-01-18.en  306        692      477 356  316        258       203
-##   ep-00-01-19.en  132        104      187 157   99        104        89
-##   ep-00-01-21.en    0          0        0   1    0          0         1
-##   ep-00-02-02.en  188        194      298 220  157        191       183
-##   ep-00-02-03.en   69         36      146  73   68        101        47
-##   ep-00-02-14.en   80        126      132  86   75         91        90
-##   ep-00-02-15.en  312        562      449 365  375        216       246
-##   ep-00-02-16.en  293        260      556 360  179        212       187
-##   ep-00-02-17.en  185        184      336 307  215        116       178
+## Docs             also can commission european  mr must parliament
+##   ep-00-01-17.en   82  46        130       93 128   53         79
+##   ep-00-01-18.en  306 200        692      477 356  316        258
+##   ep-00-01-19.en  132 107        104      187 157   99        104
+##   ep-00-01-21.en    0   0          0        0   1    0          0
+##   ep-00-02-02.en  188 118        194      298 220  157        191
+##   ep-00-02-03.en   69  59         36      146  73   68        101
+##   ep-00-02-14.en   80  63        126      132  86   75         91
+##   ep-00-02-15.en  312 255        562      449 365  375        216
+##   ep-00-02-16.en  293 183        260      556 360  179        212
+##   ep-00-02-17.en  185 142        184      336 307  215        116
 ##                 Terms
-## Docs               s union will
-##   ep-00-01-17.en  77    56   94
-##   ep-00-01-18.en 313   169  575
-##   ep-00-01-19.en 144   114  284
-##   ep-00-01-21.en   0     0    0
-##   ep-00-02-02.en 222   199  297
-##   ep-00-02-03.en  99    50  113
-##   ep-00-02-14.en  85    61  123
-##   ep-00-02-15.en 323   232  565
-##   ep-00-02-16.en 309   391  484
-##   ep-00-02-17.en 200   156  241</pre>
+## Docs             president union will
+##   ep-00-01-17.en        89    56   94
+##   ep-00-01-18.en       203   169  575
+##   ep-00-01-19.en        89   114  284
+##   ep-00-01-21.en         1     0    0
+##   ep-00-02-02.en       183   199  297
+##   ep-00-02-03.en        47    50  113
+##   ep-00-02-14.en        90    61  123
+##   ep-00-02-15.en       246   232  565
+##   ep-00-02-16.en       187   391  484
+##   ep-00-02-17.en       178   156  241</pre>
 
 </article></slide><slide class=""><hgroup><h2>Creating a DTM</h2></hgroup><article  id="creating-a-dtm-1" class="build smaller">
 
@@ -1351,17 +1360,29 @@ inspect(dtm)</pre>
 <pre class = 'prettyprint lang-r'>as.matrix(dtm)[,1:8]   # cast to an ordinary matrix and see first 8 terms</pre>
 
 <pre >##                 Terms
-## Docs             ­ £ ¾ aan abandon abandoned abandoning abandonment
-##   ep-00-01-17.en 0 0 0   0       0         0          0           0
-##   ep-00-01-18.en 1 0 0   0       1         4          0           0
-##   ep-00-01-19.en 1 0 0   0       1         1          1           0
-##   ep-00-01-21.en 0 0 0   0       0         0          0           0
-##   ep-00-02-02.en 2 1 0   0       0         0          0           0
-##   ep-00-02-03.en 0 0 0   0       1         6          0           0
-##   ep-00-02-14.en 2 0 2   0       0         1          0           0
-##   ep-00-02-15.en 0 0 0   1       0         1          0           0
-##   ep-00-02-16.en 1 0 0   0       0         0          0           0
-##   ep-00-02-17.en 1 0 0   0       1         6          0           1</pre>
+## Docs             aan abandon abandoned abandoning abandonment abattoirs
+##   ep-00-01-17.en   0       0         0          0           0         0
+##   ep-00-01-18.en   0       1         4          0           0         0
+##   ep-00-01-19.en   0       1         1          1           0         0
+##   ep-00-01-21.en   0       0         0          0           0         0
+##   ep-00-02-02.en   0       0         0          0           0         0
+##   ep-00-02-03.en   0       1         6          0           0         0
+##   ep-00-02-14.en   0       0         1          0           0         0
+##   ep-00-02-15.en   1       0         1          0           0         1
+##   ep-00-02-16.en   0       0         0          0           0         0
+##   ep-00-02-17.en   0       1         6          0           1         0
+##                 Terms
+## Docs             abb abbalsthom
+##   ep-00-01-17.en   0          0
+##   ep-00-01-18.en   3          0
+##   ep-00-01-19.en   0          0
+##   ep-00-01-21.en   0          0
+##   ep-00-02-02.en   0          0
+##   ep-00-02-03.en   0          0
+##   ep-00-02-14.en   0          0
+##   ep-00-02-15.en   0          0
+##   ep-00-02-16.en   0          0
+##   ep-00-02-17.en   0          7</pre>
 
 </article></slide><slide class=""><hgroup><h2>Creating a \(\text{tfidf}\)-weighted DTM</h2></hgroup><article  id="creating-a-texttfidf-weighted-dtm" class="build smaller">
 
@@ -1420,7 +1441,7 @@ inspect(tfidf_dtm)</pre>
 
 <pre class = 'prettyprint lang-r'>length(Terms(dtm))</pre>
 
-<pre >## [1] 14137</pre>
+<pre >## [1] 14118</pre>
 
 <pre class = 'prettyprint lang-r'>range(dtm)</pre>
 
@@ -1438,10 +1459,10 @@ inspect(tfidf_dtm)</pre>
 ## [21] &quot;mr&quot;           &quot;must&quot;         &quot;need&quot;         &quot;new&quot;         
 ## [25] &quot;now&quot;          &quot;one&quot;          &quot;parliament&quot;   &quot;people&quot;      
 ## [29] &quot;policy&quot;       &quot;political&quot;    &quot;president&quot;    &quot;question&quot;    
-## [33] &quot;report&quot;       &quot;rights&quot;       &quot;s&quot;            &quot;say&quot;         
-## [37] &quot;social&quot;       &quot;states&quot;       &quot;support&quot;      &quot;take&quot;        
-## [41] &quot;therefore&quot;    &quot;time&quot;         &quot;union&quot;        &quot;us&quot;          
-## [45] &quot;way&quot;          &quot;will&quot;         &quot;within&quot;       &quot;work&quot;</pre>
+## [33] &quot;report&quot;       &quot;rights&quot;       &quot;say&quot;          &quot;social&quot;      
+## [37] &quot;states&quot;       &quot;support&quot;      &quot;take&quot;         &quot;therefore&quot;   
+## [41] &quot;time&quot;         &quot;union&quot;        &quot;us&quot;           &quot;way&quot;         
+## [45] &quot;will&quot;         &quot;within&quot;       &quot;work&quot;</pre>
 
 </article></slide><slide class=""><hgroup><h2>Working with a DTM</h2></hgroup><article  id="working-with-a-dtm-1" class="build smaller">
 
@@ -1458,20 +1479,20 @@ inspect(tfidf_dtm)</pre>
 ##        692        575        477        356        316 
 ## 
 ## $`ep-00-01-19.en`
-##     will  council european       mr        s 
-##      284      218      187      157      144 
+##     will  council european       mr     also 
+##      284      218      187      157      132 
 ## 
 ## $`ep-00-01-21.en`
 ## terrorist   minutes   spanish      acts  adoption 
 ##         3         2         2         1         1 
 ## 
 ## $`ep-00-02-02.en`
-## european     will        s       mr    union 
-##      298      297      222      220      199 
+##   european       will         mr      union commission 
+##        298        297        220        199        194 
 ## 
 ## $`ep-00-02-03.en`
-##   european       will parliament          s        car 
-##        146        113        101         99         96 
+##   european       will parliament        car       cars 
+##        146        113        101         96         93 
 ## 
 ## $`ep-00-02-14.en`
 ##   european commission       will      areas      urban 
@@ -1486,8 +1507,8 @@ inspect(tfidf_dtm)</pre>
 ##      556      484      391      360      325 
 ## 
 ## $`ep-00-02-17.en`
-## european       mr     will     must        s 
-##      336      307      241      215      200</pre>
+## european       mr     will     must  tourism 
+##      336      307      241      215      187</pre>
 
 </article></slide><slide class=""><hgroup><h2>Working with a DTM</h2></hgroup><article  id="working-with-a-dtm-2" class="build smaller">
 
@@ -1550,7 +1571,7 @@ inspect(tfidf_dtm)</pre>
 
 <p><br></p>
 
-<p>→ each document is a two-dimensional feature vector, e.g.:<br> \(doc1 = \begin{pmatrix}2 \\ 1 \end{pmatrix}\).</p>
+<p>→ each document is a two-dimensional feature vector, e.g.:<br> \(\text{doc1} = \begin{pmatrix}2 \\ 1 \end{pmatrix}\).</p>
 
 </article></slide><slide class=""><hgroup><h2>Document similarity and distance</h2></hgroup><article  id="document-similarity-and-distance-1" class="build smaller">
 
@@ -1688,7 +1709,7 @@ y = \begin{pmatrix}4 \\ 2 \end{pmatrix}
 
 <p><strong>In practical terms this means the cosine distance only takes word proportions into account.</strong></p>
 
-<p>The cosine distance does not adhere to the second condition of distance metrics ((only) identical vectors have a distance of 0).</p>
+<p>The cosine distance does not adhere to the second condition of distance metrics (<em>only</em> identical vectors have a distance of 0).</p>
 
 </article></slide><slide class=""><hgroup><h2>Closing words on document similarity</h2></hgroup><article  id="closing-words-on-document-similarity" class="build">
 
@@ -1704,7 +1725,13 @@ y = \begin{pmatrix}4 \\ 2 \end{pmatrix}
 
 </article></slide><slide class="segue dark nobackground level1"><hgroup class = 'auto-fadein'><h2>The <code>tidytext</code> package</h2></hgroup><article  id="the-tidytext-package">
 
-</article></slide><slide class=""><hgroup><h2><code>tm</code> and <code>tidytext</code></h2></hgroup><article  id="tm-and-tidytext" class="build smaller">
+</article></slide><slide class=""><hgroup><h2><code>tm</code> and <code>tidytext</code></h2></hgroup><article  id="tm-and-tidytext">
+
+<p>The <em>tidytext</em> package integrates Text Mining into the <em>tidyverse</em> framework. Similar things as with <em>tm</em> can be done, but it uses data frames in long table format instead of matrices.</p>
+
+<p>The following slides are just for reference, so that you can see how you can use tidytext in conjuction with a tm corpus. Check out <a href='https://www.tidytextmining.com/' title=''>Julia Silge, David Robinson 2018: Text mining with R (free online book)</a> if you want to do more with this package.</p>
+
+</article></slide><slide class=""><hgroup><h2><code>tm</code> and <code>tidytext</code></h2></hgroup><article  id="tm-and-tidytext-1" class="build smaller">
 
 <p>It&#39;s possible to convert a <code>tm</code> matrix to a data frame which can be used with the tidytext package <a href='https://www.tidytextmining.com/' title=''>Silge &amp; Robinson 2017</a>. You can then use all the data transformations on this data frame that you already know.</p>
 
@@ -1726,7 +1753,7 @@ head(df)</pre>
 ## 5 ep-00-01-17.en abreast 0.000286 
 ## 6 ep-00-01-17.en abroad  0.000114</pre>
 
-</article></slide><slide class=""><hgroup><h2><code>tm</code> and <code>tidytext</code></h2></hgroup><article  id="tm-and-tidytext-1" class="build smaller">
+</article></slide><slide class=""><hgroup><h2><code>tm</code> and <code>tidytext</code></h2></hgroup><article  id="tm-and-tidytext-2" class="build smaller">
 
 <p>Identify the top words per document by tf-idf value:</p>
 
@@ -1754,7 +1781,7 @@ top_per_doc</pre>
 ## 10 ep-00-01-17.en berend     0.00260    10
 ## # ... with 30 more rows</pre>
 
-</article></slide><slide class=""><hgroup><h2><code>tm</code> and <code>tidytext</code></h2></hgroup><article  id="tm-and-tidytext-2" class="build smaller">
+</article></slide><slide class=""><hgroup><h2><code>tm</code> and <code>tidytext</code></h2></hgroup><article  id="tm-and-tidytext-3" class="build smaller">
 
 <pre class = 'prettyprint lang-r'># use &quot;order&quot; on x-axis so that we order per tfidf value
 ggplot(top_per_doc, aes(order, count)) +
