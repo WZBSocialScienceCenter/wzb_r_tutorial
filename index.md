@@ -82,6 +82,7 @@ December 06, 2018
 * [Slides](slides/07plotting.html)
 * [Slides PDF](slides/07plotting.pdf)
 * [Tasks](tasks_and_solutions/07plotting_tasks.html)
+* [Solutions](tasks_and_solutions/07plotting_tasks_solved.html)
 
 * [Further explanation: Long vs. Wide](special/longvswide.html)
 
@@ -100,7 +101,7 @@ December 13, 2018
 
 December 20, 2018
 
-*On this date, we'll only have a tutorial session in case we need to catch up with some learning material. I'll annouce that the week before.*
+*There won't be a tutorial session on this date.*
 
 
 ### 10 - Record linkage
