@@ -114,9 +114,11 @@ January 10, 2019
 * [Tasks](tasks_and_solutions/10linkage.html)
 
 
-### 11 - tba.
+### 11 - Collecting data from the web – Querying APIs and web scraping with R
 
 January 17, 2019
+
+*tbd.*
 
 
 ### 12 - tba.
