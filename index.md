@@ -94,19 +94,22 @@ December 13, 2018
 * [Slides](slides/08textmining.html)
 * [Slides PDF](slides/08textmining.pdf)
 * [08textmining-resources.zip (additional resources / data files)](slides/08textmining-resources.zip)
+* Tasks: See next session below
+
+
+### 9 - Text mining II
+
+January 10, 2019
+
+* [Slides](slides/09textmining2.html)
+* [Slides PDF](slides/09textmining2.pdf)
+* [08textmining-resources.zip (additional resources / data files)](slides/08textmining-resources.zip)
 * [Tasks](tasks_and_solutions/08textmining_tasks.html)
-
-
-### 9 - "Stand-by session"
-
-December 20, 2018
-
-*There won't be a tutorial session on this date.*
 
 
 ### 10 - Record linkage
 
-January 10, 2019
+January 17, 2019
 
 * [Slides](slides/10linkage.html)
 * [Slides PDF](slides/10linkage.pdf)
@@ -116,22 +119,17 @@ January 10, 2019
 
 ### 11 - Collecting data from the web – Querying APIs and web scraping with R
 
-January 17, 2019
+January 24, 2019
 
 *tbd.*
 
 
 ### 12 - tba.
 
-January 24, 2019
-
-
-### 13 - tba.
-
 January 31, 2019
 
 
-### 14 - tba.
+### 13 - tba.
 
 February 7, 2019
 
