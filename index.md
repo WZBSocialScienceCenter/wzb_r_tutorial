@@ -114,14 +114,17 @@ January 17, 2019
 * [Slides](slides/10linkage.html)
 * [Slides PDF](slides/10linkage.pdf)
 * [10linkage-resources.zip (additional resources / data files)](slides/10linkage-resources.zip)
-* [Tasks](tasks_and_solutions/10linkage.html)
+* [Tasks](tasks_and_solutions/10linkage_tasks.html)
 
 
 ### 11 - Collecting data from the web – Querying APIs and web scraping with R
 
 January 24, 2019
 
-*tbd.*
+* [Slides](slides/11collecting.html)
+* [Slides PDF](slides/11collecting.pdf)
+* [11collecting-resources.zip (additional resources / data files)](slides/11collecting-resources.zip)
+* [Tasks](tasks_and_solutions/11collecting_tasks.html)
 
 
 ### 12 - tba.
