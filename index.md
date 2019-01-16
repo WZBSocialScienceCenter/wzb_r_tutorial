@@ -105,6 +105,7 @@ January 10, 2019
 * [Slides PDF](slides/09textmining2.pdf)
 * [08textmining-resources.zip (additional resources / data files)](slides/08textmining-resources.zip)
 * [Tasks](tasks_and_solutions/08textmining_tasks.html)
+* [Solutions](tasks_and_solutions/08textmining_tasks_solved.html)
 
 
 ### 10 - Record linkage
