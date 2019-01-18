@@ -128,12 +128,18 @@ January 24, 2019
 * [Tasks](tasks_and_solutions/11collecting_tasks.html)
 
 
-### 12 - tba.
+### 12 - Introduction to Machine Learning with R I
 
 January 31, 2019
 
+* [Slides](slides/12ml1.html)
+* [Slides PDF](slides/12ml1.pdf)
+* [Tasks](tasks_and_solutions/12ml1.html)
+* [bostonhousing.zip needed for tasks](tasks_and_solutions/bostonhousing.zip)
 
-### 13 - tba.
+
+### 13 - Introduction to Machine Learning with R II
 
 February 7, 2019
 
+*tbd.*
