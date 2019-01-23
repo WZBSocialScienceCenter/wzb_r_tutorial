@@ -116,6 +116,7 @@ January 17, 2019
 * [Slides PDF](slides/10linkage.pdf)
 * [10linkage-resources.zip (additional resources / data files)](slides/10linkage-resources.zip)
 * [Tasks](tasks_and_solutions/10linkage_tasks.html)
+* [Solutions](tasks_and_solutions/10linkage_tasks_solved.html)
 
 
 ### 11 - Collecting data from the web – Querying APIs and web scraping with R
