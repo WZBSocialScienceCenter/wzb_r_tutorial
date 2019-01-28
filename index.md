@@ -143,4 +143,6 @@ January 31, 2019
 
 February 7, 2019
 
-*tbd.*
+* [Slides](slides/13ml2.html)
+* [Slides PDF](slides/13ml2.pdf)
+
