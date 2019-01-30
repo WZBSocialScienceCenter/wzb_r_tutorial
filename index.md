@@ -127,7 +127,7 @@ January 24, 2019
 * [Slides PDF](slides/11collecting.pdf)
 * [11collecting-resources.zip (additional resources / data files)](slides/11collecting-resources.zip)
 * [Tasks](tasks_and_solutions/11collecting_tasks.html)
-
+* [Solutions](tasks_and_solutions/11collecting_tasks_solved.html)
 
 ### 12 - Introduction to Machine Learning with R I
 
@@ -135,7 +135,7 @@ January 31, 2019
 
 * [Slides](slides/12ml1.html)
 * [Slides PDF](slides/12ml1.pdf)
-* [Tasks](tasks_and_solutions/12ml1.html)
+* [Tasks](tasks_and_solutions/12ml1_tasks.html)
 * [bostonhousing.zip needed for tasks](tasks_and_solutions/bostonhousing.zip)
 
 
