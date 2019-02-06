@@ -137,6 +137,7 @@ January 31, 2019
 * [Slides PDF](slides/12ml1.pdf)
 * [Tasks](tasks_and_solutions/12ml1_tasks.html)
 * [bostonhousing.zip needed for tasks](tasks_and_solutions/bostonhousing.zip)
+* [A possible solution for the bostonhousing task](tasks_and_solutions/bostonhousing_solution.zip)
 
 
 ### 13 - Introduction to Machine Learning with R II
