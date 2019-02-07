@@ -1,0 +1,1007 @@
+---
+title: "R Tutorial at the WZB"
+subtitle: "08 - Text mining I"
+author: "Markus Konrad"
+date: "December 13, 2018"
+output:
+  ioslides_presentation:
+    logo: _all/wzbfirmierungquerschwarzmitschrift.png
+    css: _all/custom.css
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(R.options = list(max.print = 150))
+
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+
+
+plot_dtm_heatmap <- function(dtm, xlabel = NULL, ylabel = 'document', value_labels_size = 4) {
+  orig_rownames <- rownames(dtm)
+  if (is.null(orig_rownames)) {
+    row_names <- as.character(1:nrow(dtm))
+  } else {
+    row_names <- orig_rownames
+  }
+  
+  df <- as.data.frame(dtm)
+  df$row_names <- row_names
+  df <- df %>% gather(key = 'term', value = 'n', -row_names)
+  
+  if (!('term') %in% colnames(df) && 'V1' %in% colnames(df)) {
+    df$term <- 1
+    df$n <- df$V1
+  }
+  
+  ggplot(df, aes(x = term, y = row_names, fill = n)) +
+    geom_tile(color = 'white', size = 1.5) +
+    geom_text(aes(x = term, y = row_names, label = n), size = value_labels_size) +
+    xlab(xlabel) +
+    ylab(ylabel) +
+    scale_fill_distiller(guide = FALSE) +
+    scale_y_discrete(limits = rev(row_names)) +
+    coord_fixed() +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+}
+
+plot_dist_heatmap <- function(distmat, value_labels_size = 3) {
+  df <- as.data.frame(distmat)
+  row_names <- rownames(distmat)
+  df$row_names <- row_names
+  df <- df %>% gather(key = 'doc', value = 'distval', -row_names) %>% mutate(distval_lbl = as.character(round(distval, 2)))
+  
+  ggplot(df, aes(x = doc, y = row_names, fill = distval)) +
+    geom_tile(color = 'white', size = 1.5) +
+    geom_text(aes(x = doc, y = row_names, label = distval_lbl), size = value_labels_size) +
+    scale_fill_distiller(guide = FALSE) +
+    scale_y_discrete(limits = rev(row_names)) +
+    xlab(NULL) + ylab(NULL) +
+    coord_fixed() +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+}
+```
+
+
+## Today's schedule
+
+1. Review of last week's tasks
+2. Text as data
+3. Text mining methods for the Social Sciences
+4. Matrices and lists in R
+5. Bag-of-words model
+6. Practical text mining with the `tm` package (I)
+
+# Review of last week's tasks
+
+## Solution for tasks #7
+
+now online on https://wzbsocialsciencecenter.github.io/wzb_r_tutorial/
+
+
+# Text as data
+
+## Text as data {.build}
+
+Natural language is context-dependent, loosely structured and often ambigious. This makes extracting structured information hard.
+
+*Text mining (TM)* or *text analytics* tries to uncover structured key information from natural language text.
+
+Other important fields:
+
+* **Natural language processing (NLP)**: deals with understanding and generating natural language (Amazon Echo, Apple Siri, etc.)
+* **Quantitative text analysis (QTA):** *"[...] extracting quantitative information from [...] text for social scientific purposes [...]"*<br>([Ken Benoit](https://kenbenoit.net/quantitative-text-analysis-tcd-2016/))
+
+
+## Key terms in TM: Text corpus {.build}
+
+Text material is compiled to a **corpus**. This is the data base for TM contains a set of **documents**. Each document has:
+
+1. A unique name
+2. Its raw text (machine-readable but unprocessed text)
+3. Additional variables used during analysis, e.g. author, date, etc.
+4. Meta data (variables not used during analysis, e.g. source)
+
+Documents can be anything: news articles, scientific papers, twitter posts, books, paragraphs of books, speeches, etc.
+
+**Usually, you don't mix different sorts of text within a corpus.**
+
+
+## Key terms in TM: Tokens/terms {.build}
+
+A **token** is the *lexical unit* you work with during your analysis. This can be phrases, **words**, symbols, characters, etc.
+
+&rarr; ~ unit of measurement in your TM project.
+
+Even if you initially use words as lexical unit, a tokenized and processed word might not be a lexicographically correct word anymore.
+
+Example that employs *stemming* and *lower-case transformation*:<br>*"I argued with him"* &rarr; `["i", "argu", "with", "he"]`
+
+Tokens are also called **terms**.
+
+
+## Text mining applications {.build}
+
+What can you find out with text mining? A few key methods often employed in the Soc. Sciences:
+
+**1. Simple & weighted word frequency comparisons**
+
+Count the words that occur in each document, calculate proportions, compare.
+
+Weighted frequencies: Increase importance of document-specific words, reduce importance of very common words<br>&rarr; key concept: *term frequency - inverse document frequency<br>(tf-idf)*.
+
+
+## Text mining applications
+
+**1. Simple & weighted word frequency comparisons**
+
+<div class="fullfig">
+  <img src="08textmining-figure/word-freq-comparison.png" alt="Word frequency comparison" style="max-width:80%"><br>
+  <small>source: [Silge & Robinson 2018: Text Mining with R](https://www.tidytextmining.com/tidytext.html#word-frequencies)</small>
+</div>
+
+
+## Text mining applications {.build .smaller}
+
+**2. Word co-occurrence and correlation**
+
+How often do pairs of words appear together per document?
+
+<div class="fullfig">
+  <img src="08textmining-figure/wordcorsnetwork.png" alt="Word correlation network" style="max-width:60%"><br>
+  <small>source: [Silge & Robinson 2018: Text Mining with R](https://www.tidytextmining.com/ngrams.html#pairwise-correlation)</small>
+</div>
+
+
+## Text mining applications {.build}
+
+**3. Document classification**
+
+Approach:
+
+1. Train a machine learning model with labelled documents
+2. Evaluate model performance (estimate accuracy using held-out labelled data)
+3. Classify unlabelled documents *(prediction)*
+
+Examples:
+
+- binary classification (spam / not spam, hate-speech / not hate-speech, ...)
+- multiclass classification (predefined political categories, style categories, ...)
+
+
+## Text mining applications {.build .smaller}
+
+**4. Document similarity and clustering**
+
+How similar is document A as compared to document B?
+
+Mostly used with word frequencies &rarr; compare (weighted) word usage between documents.
+
+Once you have similarity scores for documents, you can cluster them.
+
+<div class="fullfig">
+  <img src="08textmining-figure/hclust.png" alt="Hierarchical clusters of party manifestos for Bundestag election 2017" style="max-width:60%"><br>
+  <small>Hierarchical clusters of party manifestos for Bundestag election 2017</small>
+</div>
+
+
+## Text mining applications {.build}
+
+**5. Term similarity and edit-distances**
+
+Term similarity work on the level of terms and their (phonetic, lexicographic, etc.) similarity. Edit-distances are often used to measure the *editing difference* between two terms or two documents A, B (how many editing steps to you need to come from A to B?).
+
+Example: *Levenshtein distance* between "**k**itt**e**n" and "sittin**g**" is 3 edits.
+
+Pratical example: Measure how much drafts for a law changed over time.
+
+
+## Text mining applications {.build .smaller}
+
+**6. Topic modeling**
+
+*Unsupervised* machine learning approach to find latent topics in text corpora. Topics are distributions across words. Each document can be represented as a mixture of topics.
+
+<div class="fullfig">
+  <img src="08textmining-figure/ldavis.png" alt="LDAVis" style="max-width:65%">
+</div>
+
+Practical example: Measure how the presence of certain topics changed over time in parliamentary debates; differences between parties, etc.
+
+
+## Text mining applications {.build .smaller}
+
+**7. Sentiment analysis**
+
+<div style="float:left;width:50%">
+Also known as *opinion mining*. In it's basic form, it tries to find out if the sentiment in a document is positive, neutral or negative by assigning a sentiment score.
+
+This score can be estimated by using supervised machine learning approaches (using training data of already scored documents) or in a lexicon-based manner (adding up the individual sentiment scores for each word in the text).
+</div>
+
+<div class="fullfig" style="float:right;width:50%">
+  <img src="08textmining-figure/sentimentplot-1.png" alt="Word frequency comparison" style="max-width:90%"><br>
+  <small>source: [Silge & Robinson 2018: Text Mining with R](https://www.tidytextmining.com/sentiment.html)</small>
+</div>
+
+<div style="clear:both"></div>
+
+## Text mining applications {.build}
+
+**Named entity recognition:** Find out company names, people's names, etc. in texts.
+
+**Gender (from name) prediction:** Estimate the gender of a person (for example from a name).
+
+**... and much more**
+
+## Text mining steps {.build}
+
+TM consists of several steps, each of them applying a variety of methods:
+
+1. Collection of text material into a corpus
+2. Text processing (*tokenization* and *normalization* of the corpus)
+3. Feature extraction (extracting structured information)
+4. Modeling
+
+**Which steps and methods you apply depends on your material and the modeling approach.**
+
+
+## Packages for TM in the R world {.smaller .build}
+
+- [tm](https://cran.r-project.org/web/packages/tm/index.html), Feinerer et al.
+    - extensive set of tools for text mining
+    - developed since 2008
+- [tidytext](https://cran.r-project.org/web/packages/tidytext/index.html), [Silge & Robinson 2018](https://www.tidytextmining.com/)
+    - text preprocessing, topic modeling, sentiment analysis in the "tidyverse"
+    - designed for English language text
+- [quanteda](https://quanteda.io/), Benoit et al.
+    - newly developed, extensive framework
+    - also non-English texts
+
+Specific methods:
+
+- Topic modeling: [topicmodels](https://cran.r-project.org/web/packages/topicmodels/index.html), [lda](https://cran.r-project.org/web/packages/lda/index.html), [stm](https://cran.r-project.org/web/packages/stm/index.html)
+- Text classification: [RTextTools](https://cran.r-project.org/web/packages/RTextTools/index.html)
+- Word embeddings and similarities: [text2vec](https://cran.r-project.org/web/packages/text2vec/index.html)
+
+
+# Matrices and lists in R
+
+## Matrices {.build}
+
+The `matrix` structure stores data in a matrix with $m$ rows and $n$ columns. Each value must be of the same data type (type coercion rules apply).
+
+To create a matrix, specify the data and its dimensions:
+
+```{r}
+matrix(1:6, nrow = 2, ncol = 3)
+```
+
+## Matrices
+
+The `matrix` structure stores data in a matrix with $m$ rows and $n$ columns. Each value must be of the same data type (type coercion rules apply).
+
+To create a matrix, specify the data and its dimensions:
+
+```{r}
+matrix(1:6, nrow = 3, ncol = 2)
+```
+
+## Matrices
+
+The `matrix` structure stores data in a matrix with $m$ rows and $n$ columns. Each value must be of the same data type (type coercion rules apply).
+
+To create a matrix, specify the data and its dimensions:
+
+```{r}
+# fill data in rowwise order
+matrix(1:6, nrow = 2, ncol = 3, byrow = TRUE)
+```
+
+## Indexing matrices {.build .smaller}
+
+```{r}
+(A <- matrix(1:6, nrow = 2, ncol = 3, byrow = TRUE))
+```
+
+The same indexing rules as for data frames apply. Individual cells are selected by `[row index, column index]`:
+
+```{r}
+A[2, 3]
+```
+
+Rows are selected by `[row index,]`:
+
+```{r}
+A[2,]
+```
+
+Columns are selected by `[, column index]`:
+
+```{r}
+A[,3]
+```
+
+## Matrix operations {.build .smaller}
+
+```{r}
+A
+```
+
+Matrix `B` with dimensions 3x3:
+
+```{r}
+(B <- matrix(rep(1:3, 3), nrow = 3, ncol = 3, byrow = TRUE))
+```
+
+Matrix multiplication:
+
+```{r}
+A %*% B
+```
+
+## Matrix operations {.smaller}
+
+```{r}
+A
+```
+
+Matrix `C` with same dimensions as `A`:
+
+```{r}
+(C <- matrix(6:1, nrow = 2, ncol = 3, byrow = TRUE))
+```
+
+Matrix addition:
+
+```{r}
+A + C
+```
+
+## Matrix operations {.smaller}
+
+```{r}
+A
+```
+
+Matrix `C` with same dimensions as `A`:
+
+```{r}
+(C <- matrix(6:1, nrow = 2, ncol = 3, byrow = TRUE))
+```
+
+Element-wise multiplication:
+
+```{r}
+A * C
+```
+
+## Matrix operations {.smaller}
+
+```{r}
+A
+```
+
+Rowwise normalization of `A`:
+
+```{r}
+rowSums(A)
+```
+
+```{r}
+A / rowSums(A)
+```
+
+Transpose:
+
+```{r}
+t(A)
+```
+
+
+
+## Row and column names for matrix {.build .smaller}
+
+As with data frames, row names and column names can optionally be set via `rownames()` and `colnames()`:
+
+```{r}
+A
+```
+
+
+```{r}
+rownames(A) <- c('row1', 'row2')
+colnames(A) <- c('col1', 'col2', 'col3')
+A
+```
+
+```{r}
+A['row2',]
+```
+
+
+## Lists {.build .smaller}
+
+In contrast to vectors and matrices, *lists* can contain elements of different types:
+
+```{r}
+list(1:3, 'abc', 3.1415, c(FALSE, TRUE, TRUE, FALSE))
+```
+
+## Lists {.build .smaller}
+
+You can think of a list as arbitrary "key-value" data structure. For each unique "key" (i.e. index), a list can hold a value of arbitrary type, even another list.
+
+```{r}
+l <- list(a = 1:3, b = 'abc', c = 3.1415,
+          d = c(FALSE, TRUE, TRUE, FALSE),
+          e = list(1, 2, 3))
+str(l)
+```
+
+
+## Indexing a list {.build .smaller}
+
+If no key is given, the default keys are set as 1 to N:
+
+```{r}
+(l <- list(1:3, 'abc', 3.1415, c(FALSE, TRUE, TRUE, FALSE)))
+```
+
+Indexing with single square brackets **always results in a new list** (here, containing only a single element):
+
+```{r}
+l[4]
+```
+
+## Indexing a list {.smaller}
+
+If no key is given, the default keys are set as 1 to N:
+
+```{r}
+(l <- list(1:3, 'abc', 3.1415, c(FALSE, TRUE, TRUE, FALSE)))
+```
+
+Use double square brackets to get the actual element as vector:
+
+```{r}
+l[[4]]
+```
+
+
+## Indexing a list {.build .smaller}
+
+We can explicitly define keys for a list:
+
+```{r}
+l <- list(a = 1:3, b = 'abc', c = 3.1415,
+          d = c(FALSE, TRUE, TRUE, FALSE),
+          e = list(1, 2, 3))
+str(l)
+```
+
+The same rules for single and double square brackets apply:
+
+```{r}
+l['d']
+```
+## Indexing a list {.smaller}
+
+We can explicitly define keys for a list:
+
+```{r}
+l <- list(a = 1:3, b = 'abc', c = 3.1415,
+          d = c(FALSE, TRUE, TRUE, FALSE),
+          e = list(1, 2, 3))
+str(l)
+```
+
+The same rules for single and double square brackets apply:
+
+```{r}
+l[['d']]
+```
+
+## Indexing a list {.smaller}
+
+We can explicitly define keys for a list:
+
+```{r}
+l <- list(a = 1:3, b = 'abc', c = 3.1415,
+          d = c(FALSE, TRUE, TRUE, FALSE),
+          e = list(1, 2, 3))
+str(l)
+```
+
+A shortcut to access elements in a list by key is the dollar symbol:
+
+```{r}
+l$d    # same as l[['d']]
+```
+
+
+# Bag-of-words model
+
+## Bag-of-words model {.build}
+
+*Bag-of-words* is a simple, but powerful representation of a text corpus.
+
+- each document in a corpus is "bag of its words"<br>&rarr; store which words occur and how often do they occur<br>&rarr; disregard grammar, word order
+- basis for:
+    - word frequency, co-occurrence
+    - document similarity and clustering
+    - topic modeling
+    - text classification, etc.
+- result is a *document term matrix (DTM)* (also: document feature matrix)
+
+
+## Bag-of-words model – example {.build .smaller}
+
+Three documents:
+
+```{r, echo=FALSE, message=FALSE}
+bow_docs <- data.frame(doc_id = 1:3, text = c('Smithers, release the hounds.',
+                                              'Smithers, unleash the League of Evil!',
+                                              'The evil Evil of the most Evil.'))
+knitr::kable(bow_docs, align = 'l', format = "html", table.attr = 'class="table table-condensed small"')
+```
+
+<br>The resulting DTM with **normalized** words:
+
+```{r, echo=FALSE, message=FALSE, fig.height=2}
+library(tm)
+bow_corpus <- VCorpus(DataframeSource(bow_docs))
+bow_dtm <- as.matrix(DocumentTermMatrix(bow_corpus, control = list(removePunctuation = TRUE)))
+
+plot_dtm_heatmap(bow_dtm)
+```
+
+- rows are $N_{docs}$ documents, columns are words, elements are counts
+- unique words *(terms)* of all documents make up *vocabulary* of size $N_{terms}$
+- column sums: overall occurences per word; row sums: document length
+
+
+## Bag of words with n-grams {.build}
+
+So far, we've used *unigrams*. Each word *("term")* is counted individually.
+
+We can also count **subsequent word combinations (n-grams)**. This counts $n$ subsequent words for each word:
+
+"Smithers, release the hounds."
+
+&rarr; as bigrams (2-grams):
+
+`["smithers release", "release the", "the hounds"]`
+
+## Bag of words with n-grams {.build .smaller}
+
+Again, our example data:
+
+```{r, echo=FALSE, message=FALSE}
+knitr::kable(bow_docs, align = 'l', format = "html", table.attr = 'class="table table-condensed small"')
+```
+
+<br>Bigrams:
+
+```{r, echo=FALSE, message=FALSE, fig.height=2}
+BigramTokenizer <- function(x) {
+  unlist(lapply(ngrams(words(x), 2), paste, collapse = " "), use.names = FALSE)
+}
+
+bow_dtm_bigr <- as.matrix(DocumentTermMatrix(bow_corpus, control = list(removePunctuation = TRUE, tokenize = BigramTokenizer)))
+plot_dtm_heatmap(bow_dtm_bigr)
+```
+
+- advantage: captures more "context"
+- disadvantage: captures lots of very rare word combinations
+
+## Tf-idf weighting {.build}
+
+Problem with BoW: common (uninformative) words (e.g. *"the, a, and, or, ..."*) that occur often in many documents overshadow more specific (potentially more interesting) words.
+
+Solutions:
+
+- use **stopword lists** &rarr; manual effort
+- use a **weighting factor** that decreases the weight of uninformative words / increases the weight of specific words
+
+## Tf-idf weighting {.build}
+
+*Tf-idf (term frequency – inverse document frequency)* is such a weighting factor.
+
+For each term $t$ in each document $d$ in a corpus of all documents $D$, the $\text{tfidf}$ weighting factor is calculated as product of two factors:
+
+$$
+\text{tfidf}(t, d, D) = \text{tf}(t, d) \cdot \text{idf}(t, D)
+$$
+
+- $tf(t, d)$: term frequency – measures how often a word $t$ occurs in document $d$
+- $idf(t, D)$: inverse document frequency – *inverse* of how common a word $t$ is across all documents $D$ in a corpus
+
+There are different weighting variants for both factors.
+
+## Term frequency $\text{tf}$ {.build .smaller}
+
+Common variants:
+
+- absolute word count of term $t$: $\text{tf(t, d)} = N_{d,t}$
+- relative word frequency of $t$ in a document $d$: $\text{tf(t, d)} = N_{d,t}/N_d$
+    - prevents that documents with many words get higher weights than those with few words
+
+<br>
+
+<div style="float:left;width:50%;text-align:center">
+```{r, echo=FALSE, message=FALSE, fig.width=4, fig.height=2}
+plot_dtm_heatmap(bow_dtm) + ggtitle('Absolute term counts')
+```
+</div><div style="float:right;width:50%;text-align:center">
+```{r, echo=FALSE, message=FALSE, fig.width=4, fig.height=2}
+tf_dtm <- bow_dtm / rowSums(bow_dtm)
+plot_dtm_heatmap(round(tf_dtm, 2), value_labels_size = 3) + ggtitle('relative term frequencies')
+```
+</div><div style="clear:both"></div>
+
+
+## Inverse document frequency $\text{idf}$ {.build .smaller}
+
+Again, many variants. We'll use this one:
+
+$$
+\text{idf}(t, D) = log_2 (1 + \frac{|D|}{|d \in D: t \in d|})
+$$
+
+- $t$: a term from our vocabulary of corpus $D$
+- $|D|$: the number of documents in corpus $D$
+- $|d \in D: t \in d|$: number of documents $d$ in which $t$ appears
+- we assume that each $t$ occurs at least once in $D$ (otherwise a division by zero would be possible)
+- we add $1$ inside $log$ in order to avoid an $\text{idf}$ value of 0
+
+## Inverse document frequency $\text{idf}$ {.smaller}
+
+Again, many variants. We'll use this one:
+
+$$
+\text{idf}(t, D) = log_2 (1 + \frac{|D|}{|d \in D: t \in d|})
+$$
+
+```{r, echo=FALSE, message=FALSE, fig.height=2}
+plot_dtm_heatmap(bow_dtm)
+```
+
+Calculate $|d \in D: t \in d|$ (number of doc. $d$ in which $t$ appears) for all terms:
+
+```{r, echo=FALSE}
+(n_t_in_d <- apply(bow_dtm, 2, function(n_t) { sum(n_t > 0) }))
+```
+
+## Inverse document frequency $\text{idf}$ {.smaller}
+
+Again, many variants. We'll use this one:
+
+$$
+\text{idf}(t, D) = log_2 (1 + \frac{|D|}{|d \in D: t \in d|})
+$$
+
+```{r, echo=FALSE, message=FALSE, fig.height=2}
+plot_dtm_heatmap(bow_dtm)
+```
+
+Plug-in to above formula and you get the $\text{idf}$ for all terms:
+
+```{r, echo=FALSE}
+idf <- log2(1 + (nrow(bow_dtm) / (n_t_in_d)))
+round(idf, 2)
+```
+
+This factor is multiplied to each term frequency<br>
+&rarr; the more common the word in the corpus, the lower its $\text{idf}$ value
+
+
+## Why is $\text{idf}$ logarithmically scaled? {.smaller .build}
+
+The distribution of words in a natural language text usually follows the *"Zipfian distribution"*, which relates to Zipf's law:
+
+> Zipf’s law states that the frequency that a word appears is inversely proportional to its rank.
+> -- [Silge & Robinson 2017](https://www.tidytextmining.com/tfidf.html#zipfs-law)
+
+$$\text{frequency} \propto r^{-1}$$
+
+&rarr; second most frequent word occurs half as often as the most frequent word; third most frequent word occurs a third of the time of the most frequent word, etc.
+
+To account for that, we use logarithmical values:
+
+<div style="float:left;width:50%;text-align:center">
+```{r, echo=FALSE, message=FALSE, fig.width=4, fig.height=2.5}
+x <- 1:100
+plot(x, x^-1, type = 'l', xlab = "rank r", ylab = "frequency f(r)")
+title(expression(f(r) == r^-1))
+```
+</div><div style="float:right;width:50%;text-align:center">
+```{r, echo=FALSE, message=FALSE, fig.width=4, fig.height=2.5}
+x <- 1:100
+plot(x, log2(x), type = 'l', xlab = expression(frac(abs(D), abs(d %in% D: t %in% d))), ylab = expression(log[2]))
+```
+</div><div style="clear:both"></div>
+
+
+## Tf-idf weighting {.build .smaller}
+
+Back to the initial formula:
+
+$$
+\text{tfidf}(t, d, D) = \text{tf}(t, d) \cdot \text{idf}(t, D)
+$$
+
+<div style="float:left;width:50%;text-align:center">
+```{r, echo=FALSE, message=FALSE, fig.width=4, fig.height=2}
+plot_dtm_heatmap(round(tf_dtm, 2), value_labels_size = 3) + ggtitle('tf')
+```
+
+</div><div style="float:right;width:50%;text-align:center">
+```{r, echo=FALSE, fig.width=2, fig.height=3}
+idf_to_plot <- as.matrix(round(idf, 2))
+rownames(idf_to_plot) <- colnames(tf_dtm)
+colnames(idf_to_plot) <- NULL
+plot_dtm_heatmap(idf_to_plot, xlab = NULL, ylab = NULL, value_labels_size = 3) +
+  ggtitle('idf') +
+  theme(axis.ticks.x=element_blank(), axis.text.x=element_blank())
+```
+</div><div style="clear:both"></div>
+
+
+## Tf-idf weighting {.smaller}
+
+Back to the initial formula:
+
+$$
+\text{tfidf}(t, d, D) = \text{tf}(t, d) \cdot \text{idf}(t, D)
+$$
+
+Result after matrix multiplication between $\text{tf}$ and diagonal of $\text{idf}$:
+
+<div style="float:left;width:50%;text-align:center">
+```{r, echo=FALSE, message=FALSE, fig.width=4, fig.height=2}
+tfidf_dtm <- tf_dtm %*% diag(idf)
+colnames(tfidf_dtm) <- names(idf)
+plot_dtm_heatmap(round(tfidf_dtm, 2), value_labels_size = 3) + ggtitle('tf-idf weighted DTM')
+```
+</div><div style="float:right;width:50%;text-align:center">
+
+```{r, echo=FALSE, message=FALSE, fig.width=4, fig.height=2}
+plot_dtm_heatmap(bow_dtm) + ggtitle('original DTM with simple counts')
+```
+
+</div><div style="clear:both"></div>
+
+
+&rarr; uncommon (i.e. more specific) words get higher weight (e.g. *"hounds"* or *"league"*)
+
+## Feature vectors {.smaller .build}
+
+Once we have a DTM, we can consider each document as a **vector across terms** (each row in a DTM is a vector of size $N_{terms}$).
+
+E.g. document #3 has the following term count vector:
+
+```{r, echo=FALSE}
+as.matrix(bow_dtm[3,])
+```
+
+In machine learning terminology this is a **feature vector**. We can use these features for example for document classification, **document similarity**, document clustering, etc.
+
+
+## Non-English text
+
+Most packages, tutorials, etc. are designed for English language texts. When you work with other languages, you may need to apply other methods for text preprocessing. For example, working with German texts might require proper *lemmatization* to bring words from their inflected form to their base form (e.g. *"geschlossen"* &rarr; *"schließen"*).
+
+
+# Practical text mining with the `tm` package
+
+## The `tm` package
+
+- extensive set of tools for text mining in R
+- developed since 2008 by Feinerer et al.
+
+Resources to start:
+
+- [package overview on CRAN](https://cran.r-project.org/web/packages/tm/index.html)
+- [Introduction to the tm Package](https://cran.r-project.org/web/packages/tm/vignettes/tm.pdf)
+
+I will demonstrate how to use the package to investigate word frequency and document similarity.
+
+## Creating a corpus {.smaller .build}
+
+A corpus contains the raw text for each document (identified by a document ID).
+
+The base class is `VCorpus` which can be initialized with a data source.
+
+Read plain text files from a directory:
+
+```{r, eval=FALSE}
+corpus <- VCorpus(DirSource('path/to/documents', encoding = 'UTF-8'),
+                  readerControl = list(language = 'de'))  # default language is 'en'
+```
+<br>
+
+- `encoding` specifies the text format &rarr; important for special characters (like German umlauts)
+- many file formats supported (Word documents, PDF documents, etc.)
+
+
+## Creating a corpus {.smaller .build}
+
+A data frame can be converted to a corpus, too. It must contain at least the columns `doc_id`, `text`:
+
+```{r, eval=FALSE}
+df_texts
+##  doc_id  text                                           date 
+##  <chr>   <chr>                                          <chr>
+## 1 Grüne   "A. EINLEITUNG\nLiebe Bürgerinnen und Bürger,… 2017…
+## 2 Linke   "Die Zukunft, für die wir kämpfen: SOZIAL. GE… 2017…
+## 3 SPD     "Es ist Zeit für mehr Gerechtigkeit!\n2017 is… 2017…
+```
+
+
+```{r, eval=FALSE}
+corpus <- VCorpus(DataframeSource(df_texts))
+```
+
+
+## The English Europarl corpus {.smaller .build}
+
+We load a sample of the [European Parliament Proceedings Parallel Corpus](http://www.statmt.org/europarl/) with English texts. If you want to follow along, download ["08textmining-resource.zip" from the tutorial website](https://wzbsocialsciencecenter.github.io/wzb_r_tutorial/#8---text-mining-i).
+
+
+```{r, message=FALSE, warning=FALSE}
+library(tm)
+
+europarl <- VCorpus(DirSource('08textmining-resources/nltk_europarl'))
+europarl
+```
+
+## Inspecting a corpus {.smaller .build}
+
+`inspect` returns information on corpora and documents:
+
+```{r}
+inspect(europarl)
+```
+
+## Inspecting a corpus {.smaller .build}
+
+Information for the fourth document:
+
+```{r}
+inspect(europarl[[4]])
+```
+
+```{r, echo=FALSE}
+library(stringr)
+
+corpus2df <- function(corp) {
+  txt <- c()
+  for (i in 1:length(corp)) {
+    doc <- corp[[i]]
+    new_txt <- str_trim(content(doc))
+    new_txt <- new_txt[new_txt != '']
+    txt <- c(txt, new_txt[1])
+  }
+  
+  data.frame(name = 1:length(corp), text = paste0(substr(str_trim(txt), 0, 50), '...'), stringsAsFactors = FALSE)
+}
+```
+
+## Inspecting a corpus {.smaller .build}
+
+Get the raw text of a document with `content()`:
+
+```{r}
+head(content(europarl[[1]]))
+```
+
+
+## Text processing {.build}
+
+We want to investigate word frequencies in our corpus. To count words, we need to transform raw text into a *normalized* sequence of *tokens*.
+
+Why normalize text? Consider these documents:
+
+1. "We can't explain what we don't know."
+2. "We cannot do that. We do not want that."
+
+- instances of *"We"* and *"we"* shouldn't be counted separately &rarr; transform to lower case
+- instances of contracted and expanded words (*"can't"* and *"cannot"*) shouldn't be counted separately &rarr; expand all contractions
+
+
+## Text processing {.build}
+
+Text processing includes many steps and hence many decisions that have **big effect** on your results. Several possibilities will be shown here. If and how to apply them depends heavily on your data and your later analysis.
+
+Can you think of an example, where unconditional lower case transformation is bad?
+
+<!-- TODO
+- person (sur-)names ("Stone", "Smith", etc.)
+- company names, institutions, etc. ("Apple", "Sun", ...)
+
+&rarr; named entity recognition
+-->
+
+
+## Text normalization {.build}
+
+Normalization might involve some of the following steps:
+
+- replace contractions (*"shouldn't"* &rarr; *"should not"*)
+- remove punctuation and special characters
+- case conversion (usually to lower case)
+- remove stopwords (extremely common words like<br>*"the, a, to, ..."*)
+- correct spelling
+- stemming / lemmatization
+
+**The order is important!**
+
+
+## Text normalization with `tm` {.build}
+
+Text normalization can be employed with "transformations" in `tm`.
+
+Concept:
+
+```
+tm_map(<CORPUS>, content_transformer(<FUNCTION>), <OPTIONAL ARGS>)
+```
+
+- `<FUNCTION>` can be any function that takes a character vector, transforms it, and returns the result as character vector
+- `<OPTIONAL ARGS>` are fixed arguments passed to `<FUNCTION>`
+- `tm` comes with many predefined transformation functions like `removeWords`, `removePunctuation`, `stemDocuments`, ...
+
+
+## Text normalization with `tm` {.build .smaller}
+
+A transformation pipeline applied to our corpus (only showing the first three documents):
+
+Original documents:
+
+```{r, echo=FALSE}
+head(corpus2df(europarl), 3)
+```
+
+```{r}
+europarl <- tm_map(europarl, content_transformer(textclean::replace_contraction)) %>%
+  tm_map(content_transformer(tolower)) %>%
+  tm_map(removeNumbers) %>%
+  tm_map(removeWords, stopwords('en')) %>%
+  tm_map(removePunctuation) %>%
+  tm_map(stripWhitespace)
+```
+
+After text normalization:
+
+```{r, echo=FALSE}
+head(corpus2df(europarl), 3)
+```
+
+
+## Creating a DTM {.build .smaller}
+
+- `DocumentTermMatrix()` takes a corpus, tokenizes it, generates document term matrix *(DTM)*
+- parameter `control`: adjust the transformation from corpus to DTM
+    - here: allow words that are at least 2 characters long
+    - by default, words with less than 3 characters would be removed
+
+```{r}
+dtm <- DocumentTermMatrix(europarl,
+                          control = list(wordLengths = c(2, Inf)))
+inspect(dtm)
+```
+
+## Creating a DTM {.build .smaller}
+
+- a `tm` DTM is a **sparse matrix** &rarr; only values $\ne 0$ are stored &rarr; saves a lot of memory
+- many values in a DTM are 0 for natural language texts &rarr; can you explain why?
+- some functions in R can't work with sparse matrices &rarr; convert to an ordinary matrix then:
+
+```{r}
+as.matrix(dtm)[,1:8]   # cast to an ordinary matrix and see first 8 terms
+```
+
+# To be continued in the next session ...

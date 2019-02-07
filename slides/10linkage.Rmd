@@ -1,0 +1,619 @@
+---
+title: "R Tutorial at the WZB"
+subtitle: "10 - Record linkage"
+author: "Markus Konrad"
+date: "January 17, 2019"
+output:
+  ioslides_presentation:
+    logo: _all/wzbfirmierungquerschwarzmitschrift.png
+    css: _all/custom.css
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(R.options = list(max.print = 50))
+library(tidyverse)
+set.seed(123)
+```
+
+## Today's schedule
+
+1. Review of last week's tasks
+2. Record linkage: Combining data sets
+3. Reproducible workflows with RStudio
+
+# Review of last week's tasks
+
+## Solution for tasks #8
+
+now online on https://wzbsocialsciencecenter.github.io/wzb_r_tutorial/
+
+
+# Record linkage
+
+## What is record linkage? {.smaller .build}
+
+*Record linkage* or *data joining* is the process of **combining observations** in a data set $A$ with observations in a data set $B$ according to some **matching criteria**. Most of the time, a matching criterion is a **common identifier**.
+
+
+```{r, echo=FALSE}
+A <- data.frame(id = 1:5, x1 = runif(5))
+knitr::kable(A, caption = 'A', align = 'l', format = "html", table.attr = 'class="table table-condensed small left"')
+```
+
+```{r, echo=FALSE}
+B <- data.frame(id = 1:5, x2 = round(runif(5, 0, 10)))
+knitr::kable(B, caption = 'B', align = 'l', format = "html", table.attr = 'class="table table-condensed small left"')
+```
+
+```{r, echo=FALSE}
+C <- inner_join(A, B, by = 'id')
+knitr::kable(C, caption = 'A and B', align = 'l', format = "html", table.attr = 'class="table table-condensed small"')
+```
+
+<br>
+
+$A$ and $B$ are joined by common identifier *"id"*.
+
+If you have multiple data sets that can be combined, you have **relational data**.
+
+## A practical example {.smaller .build}
+
+<div style="width:50%; float:left">
+
+Data from a repeated measures experiment:
+
+```{r, echo=FALSE}
+scores_same_id <- data.frame(id = rep(1:3, each = 2),
+                             test_type = rep(c('pre', 'post'), by = 3)) %>%
+   mutate(score = as.integer(round(runif(6, 0, 10))))
+scores <- data.frame(person_id = rep(1:3, each = 2),
+                      test_type = rep(c('pre', 'post'), by = 3)) %>%
+   mutate(score = as.integer(round(runif(6, 0, 10))))
+scores_different_id <- scores
+scores
+```
+</div>
+
+<div style="width:50%; float:right">
+
+We also have "meta data" about each participant:
+
+```{r, echo=FALSE}
+(personaldata <- data.frame(id = as.integer(c(1, 3, 4)), age = as.integer(c(23, 42, 20)), smoker = c(TRUE, TRUE, FALSE)))
+```
+
+</div>
+
+<div style="clear:both"></div>
+
+We combine the data using a *left join* with criterion `person_id = id`:
+
+```{r, echo=FALSE}
+left_join(scores, personaldata, by = c('person_id' = 'id'))
+```
+
+Notice how we introduced *NA*s, because participant ID 2 is missing in the "meta data". Also participant ID 4 does not appear in the result.
+
+## Combining data sets with *dplyr* {.build}
+
+There are several functions in the package *dplyr* (contained in *tidyverse*) for combining data sets:
+
+- joins: `left_join`, `right_join`, `inner_join`, `full_join`, `semi_join`, `anti_join`
+- set operations: `intersect`, `union`, `setdiff`
+- row or column binding: `bind_rows`, `bind_cols`
+
+We'll have a look at the most common operations.
+
+## Data joining with *dplyr* {.build}
+
+There are six join operations (of which three are commonly used).
+
+All join operations have three parameters in common:
+
+- a left hand side data set `a`
+- a right hand side data set `b`
+- a match criterion `by`
+
+**The type of join operation determines which rows and values are retained.**
+
+## Left and right joins {.build .smaller}
+
+```{r, echo=FALSE}
+scores <- scores_same_id
+knitr::kable(scores, caption = 'scores', align = 'l', format = "html", table.attr = 'class="table table-condensed small left"')
+```
+
+```{r, echo=FALSE}
+knitr::kable(personaldata, caption = 'personaldata', align = 'l', format = "html", table.attr = 'class="table table-condensed small"')
+```
+
+<div style="clear:left"></div>
+
+<br>
+
+`left_join(a, b, by = <criterion>)`: **always retains rows on the "left side"** and fills up non-matching rows with *NA*s.
+
+```{r}
+left_join(scores, personaldata, by = c('id'))
+```
+
+## Left and right joins {.smaller .build}
+
+```{r, echo=FALSE}
+knitr::kable(scores, caption = 'scores', align = 'l', format = "html", table.attr = 'class="table table-condensed small left"')
+```
+
+```{r, echo=FALSE}
+knitr::kable(personaldata, caption = 'personaldata', align = 'l', format = "html", table.attr = 'class="table table-condensed small"')
+```
+
+<div style="clear:left"></div>
+
+<br>
+
+`right_join(a, b, by = <criterion>)`: **always retains rows on the "right side"** and fills up non-matching rows with *NA*s.
+
+How many rows do you expect for a right join between `scores` and `personaldata`?
+
+```{r}
+right_join(scores, personaldata, by = c('id'))
+```
+
+## Left and right joins
+
+You can always transform a left join to a right join and vice versa.
+
+Which of these statements are equivalent?
+
+- `left_join(a, b, by = 'id')` and <br> `right_join(a, b, by = 'id')`
+- `right_join(b, a, by = 'id')` and <br> `left_join(a, b, by = 'id')`
+- `left_join(b, a, by = 'id')` and <br> `right_join(a, b, by = 'id')`
+
+
+## Specifying match criteria {.smaller .build}
+
+Match criteria are specified with parameter `by`.
+
+```{r, echo=FALSE}
+experiments <- data.frame(group = rep(c('treat_A', 'treat_B', 'ctrl'), each = 2),
+                          test_type = rep(c('pre', 'post'), by = 3),
+                          mean_score = runif(6, 0, 10))
+knitr::kable(experiments, caption = 'experiments', align = 'l', format = "html", table.attr = 'class="table table-condensed small left"')
+```
+
+
+```{r, echo=FALSE}
+session_info <- data.frame(group = rep(c('treat_A', 'treat_B', 'ctrl'), each = 2),
+                           test_type = rep(c('pre', 'post'), by = 3),
+                           n = round(rnorm(6, 12)),
+                           lab = sample(c('a', 'b', 'c'), size = 6, replace = TRUE))
+knitr::kable(session_info, caption = 'session_info', align = 'l', format = "html", table.attr = 'class="table table-condensed small"')
+```
+
+<div style="clear:left"></div>
+
+<br>
+
+Parameter `by` is a character vector with all columns that must match:
+
+```{r}
+left_join(experiments, session_info, by = c('group', 'test_type'))
+```
+
+## Specifying match criteria {.build .smaller}
+
+Parameter `by` can be a *named* character vector like `c('x' = 'y')`. This will match `a.x` to `b.y` (`x` of left-hand side to `y` of right-hand side).
+
+This time, the `scores` data set has an ID column named `person_id`:
+
+```{r, echo=FALSE}
+scores <- scores_different_id
+knitr::kable(scores, caption = 'scores', align = 'l', format = "html", table.attr = 'class="table table-condensed small left"')
+```
+
+```{r, echo=FALSE}
+knitr::kable(personaldata, caption = 'personaldata', align = 'l', format = "html", table.attr = 'class="table table-condensed small"')
+```
+
+<div style="clear:left"></div>
+
+<br>We have to consider that when specifying the matching criterion:
+
+```{r}
+left_join(scores, personaldata, by = c('person_id' = 'id'))
+```
+
+## Inner join {.build .smaller}
+
+```{r, echo=FALSE}
+knitr::kable(scores, caption = 'scores', align = 'l', format = "html", table.attr = 'class="table table-condensed small left"')
+```
+
+```{r, echo=FALSE}
+knitr::kable(personaldata, caption = 'personaldata', align = 'l', format = "html", table.attr = 'class="table table-condensed small"')
+```
+
+<div style="clear:left"></div>
+
+<br>
+
+`inner_join(a, b, by = <criterion>)`: **only retains rows that match on both sides.**
+
+How many rows do you expect for an inner join between `scores` and `personaldata`?
+
+```{r}
+inner_join(scores, personaldata, by = c('person_id' = 'id'))
+```
+
+## Full join {.build .smaller}
+
+```{r, echo=FALSE}
+knitr::kable(scores, caption = 'scores', align = 'l', format = "html", table.attr = 'class="table table-condensed small left"')
+```
+
+```{r, echo=FALSE}
+knitr::kable(personaldata, caption = 'personaldata', align = 'l', format = "html", table.attr = 'class="table table-condensed small"')
+```
+
+<div style="clear:left;margin-top:10px">
+`full_join(a, b, by = <criterion>)`: **retains all rows for both sides** and fills up non-matching rows with *NA*s.
+</div>
+
+How many rows do you expect for a full join between `scores` and `personaldata`?
+
+```{r}
+full_join(scores, personaldata, by = c('person_id' = 'id'))
+```
+
+## Semi join {.build .smaller}
+
+```{r, echo=FALSE}
+knitr::kable(scores, caption = 'scores', align = 'l', format = "html", table.attr = 'class="table table-condensed small left"')
+```
+
+```{r, echo=FALSE}
+knitr::kable(personaldata, caption = 'personaldata', align = 'l', format = "html", table.attr = 'class="table table-condensed small"')
+```
+
+<div style="clear:left;margin-top:30px">
+`semi_join(a, b, by = <criterion>)`: A semi join is a *filtering join*. It returns **all observations of `a` where the criterion matches**.
+</div>
+
+```{r}
+semi_join(scores, personaldata, by = c('person_id' = 'id'))
+```
+
+&rarr; "return all scores for which we have personal data"
+
+## Anti join {.build .smaller}
+
+```{r, echo=FALSE}
+knitr::kable(scores, caption = 'scores', align = 'l', format = "html", table.attr = 'class="table table-condensed small left"')
+```
+
+```{r, echo=FALSE}
+knitr::kable(personaldata, caption = 'personaldata', align = 'l', format = "html", table.attr = 'class="table table-condensed small"')
+```
+
+<div style="clear:left;margin-top:30px">
+`anti_join(a, b, by = <criterion>)`: An anti join is the inverse of a semi join. It returns **all observations of `a` where the criterion does not match**.
+</div>
+
+```{r}
+anti_join(scores, personaldata, by = c('person_id' = 'id'))
+```
+
+&rarr; "return all scores for which we have *no* personal data"
+
+## Summary of data joins
+
+An *inner join* matches keys that appear in both data sets and returns the combined observations:
+
+<div class="fullfig">
+  <img src="10linkage-figures/join-inner.png" alt="Inner joins" style="max-height:50%"><br>
+  <small>source: [Grolemund, Wickham 2017: R for Data Science](http://r4ds.had.co.nz/relational-data.html#inner-join)</small>
+</div>
+
+## Summary of data joins
+
+*Left and right outer joins* keep all observations on the left-hand or right-hand side data sets respectively. Unmatched rows are filled up with *NA*s:
+
+<div class="fullfig">
+  <img src="10linkage-figures/join-leftright.png" alt="left and right joins" style="max-width:50%"><br>
+  <small>source: [Grolemund, Wickham 2017: R for Data Science](http://r4ds.had.co.nz/relational-data.html#inner-join)</small>
+</div>
+
+## Summary of data joins
+
+A *full outer join* keeps all observations of both data sets. Unmatched rows are filled up with *NA*s:
+
+<div class="fullfig">
+  <img src="10linkage-figures/join-full.png" alt="Full joins" style="max-height:50%"><br>
+  <small>source: [Grolemund, Wickham 2017: R for Data Science](http://r4ds.had.co.nz/relational-data.html#inner-join)</small>
+</div>
+
+## Summary of data joins {.smaller}
+
+A *semi join* filters the left-hand data set to return only those observations, that match with the right-hand data set:
+
+<div class="fullfig">
+  <img src="10linkage-figures/join-semi.png" alt="Semi joins" style="max-width:50%"><br>
+  <small>source: [Grolemund, Wickham 2017: R for Data Science](http://r4ds.had.co.nz/relational-data.html#inner-join)</small>
+</div>
+
+An *anti join* is the inverse of a semi join:
+
+<div class="fullfig">
+  <img src="10linkage-figures/join-anti.png" alt="Anti joins" style="max-width:50%"><br>
+  <small>source: [Grolemund, Wickham 2017: R for Data Science](http://r4ds.had.co.nz/relational-data.html#inner-join)</small>
+</div>
+
+## Set operations {.build}
+
+Set operations as defined in the *dplyr* package operate on data frames. They translate to the same operations as you know from maths:
+
+- `intersect(A, B)`: $A \cap B$<br>(observations that occur in both $A$ and $B$)
+- `union(A, B)`: $A \cup B$<br>(observations that occur in either $A$ or $B$)
+- `setdiff(A, B)`: $A \setminus B$<br>(observations that occur in $A$ minus those that occur in $B$)
+
+There is no "match criterion". **All values** in a row are taken into account to match observations.
+
+## Set operations {.build .smaller}
+
+<div style="width: 30%; float:left">
+
+Some examples:
+
+```{r, echo=FALSE}
+A <- data.frame(x = 1:3, y = c(1, 1, 2))
+
+knitr::kable(A, caption = 'A', align = 'l', format = "html", table.attr = 'class="table table-condensed small left"')
+```
+
+```{r, echo=FALSE}
+B <- data.frame(x = 1:3, y = c(1, 0, 2))
+
+knitr::kable(B, caption = 'B', align = 'l', format = "html", table.attr = 'class="table table-condensed small"')
+```
+
+</div>
+<div style="width:70%; float:right">
+
+```{r}
+intersect(A, B)
+```
+
+```{r}
+union(A, B)
+```
+
+```{r}
+setdiff(A, B)
+```
+
+</div>
+
+## Common mistakes {.build .smaller}
+
+**1. Forgetting to specify `by`**
+
+```{r, eval=FALSE}
+left_join(scores, personaldata)
+## Error: `by` required, because the data sources have no common variables
+```
+
+If there are common variables, they are used for matching by default, which is probably not what you want.
+
+&rarr; **always** specify `by`!
+
+**2. Not using a (named) character vector for `by`**
+
+```{r, eval=FALSE}
+left_join(scores, personaldata, by = c(person_id = id))
+## Error: `by` must specify variables to join by
+```
+
+&rarr; quotes are missing (`c('person_id' = 'id')`)
+
+```{r, eval=FALSE}
+left_join(scores, personaldata, by = ('person_id' = 'id'))
+## Error: `by` can't contain join column `id` which is missing from LHS
+```
+
+&rarr; the little `c()` is missing to denote a vector
+
+## Common mistakes {.build .smaller}
+
+**3. Comparing the wrong types**
+
+```{r, eval=FALSE}
+A <- data.frame(id = 1:3, y = c(1, 1, 2))
+B <- data.frame(id = as.factor(1:3), y = c(1, 0, 2))
+inner_join(A, B, by = 'id')
+## Error: Can't join on 'id' x 'id' because of incompatible types (integer / factor)
+```
+
+## Record linkage challenges
+
+- Many things can go wrong (wrong join operation, wrong matching, etc.):<br>
+    &rarr; check numbers of rows<br>
+    &rarr; check for *NA*s<br>
+    &rarr; check samples
+- Which type of join should I use?<br>
+    &rarr; think about which data *must* be retained and which data match can introduce *NA*s
+
+## Record linkage challenges
+
+- Often you need to combine more than two datasets:<br>
+    &rarr; combine data sets one by one<br>
+    &rarr; check at each step
+- Sometimes there's no easy way of matching observations (no common identifiers):<br>
+    &rarr; think of other strategies (other data sets, fuzzy matching, semi-automated matching)
+
+# Reproducible workflows with RStudio
+
+## Reproducible workflows {.build}
+
+What is a reproducible workflow?
+
+- allows **anybody** who meets your **software requirements** to reproduce your results **without programming trouble**
+- **anybody** can also be your "future you"
+
+Hence you need to provide:
+
+- software requirements
+- raw data*
+- software / scripts that perform the data wrangling and analyses
+- documentation
+
+<small>* subject to many limitations due to privacy and other considerations</small>
+
+## Why?
+
+- makes sure your scripts run and are understandable when:
+    - you change your computer
+    - your "future you" comes back to the project after months or years
+    - your collegues work with your code
+    - another researcher tries to reproduce your results
+- enforces transparency in the research process
+- helps to find mistakes in your code
+- helps in collaborative work
+
+## How?
+
+- **set up RStudio** correctly (next slide)
+- use **RStudio projects** for anything that is not just "playing around"
+- **never use `setwd()`** in your scripts
+- write **clean code**:
+    - structure your code with indentations
+    - use meaningful object and variable names
+- **document** your code
+
+## Setting up RStudio {.smaller .build}
+
+Go to *Tools > Global options...* &rarr; **Never** save workspace to file and never restore it on startup
+
+<div class="fullfig">
+  <img src="10linkage-figures/rstudio-settings.png" alt="RStudio settings" style="max-height:70%">
+</div>
+
+## Setting up RStudio {.smaller}
+
+Go to *Tools > Global options...* &rarr; **Never** save workspace to file and never restore it on startup
+
+Why?
+
+Because:
+
+- your scripts **should run without workspace**
+- you don't need a workspace -- the important stuff is the scripts and the data
+- you don't share a workspace -- you share scripts and data
+- "Restart R session" will not reload data: you can start afresh
+
+- use "Restart R session" (`CTRL+SHIFT+F10`) **often** to check if scripts work when loaded afresh
+
+## Working with RStudio projects {.build .smaller}
+
+RStudio supports projects *(File > New project ...)*. Use them!
+
+Why?
+
+Because:
+
+- loading a project will set the working directory (no need to `setwd()`!) to the root of the project
+- projects can be shared (RStudio creates a `myproject.Rproj` file)
+- you can easily switch between projects (top right corner)
+
+<div class="fullfig">
+  <img src="10linkage-figures/rstudio-projects.png" alt="RStudio choose project" style="max-height:30%">
+</div>
+
+## Working with RMarkdown {.build .smaller}
+
+You may have noticed that the solutions to the tasks involve a **mixture of code, plots and prose**. They're **RMarkdown documents**:
+
+- allow to write text documents with sections ("chunks") of executable R code
+- output can be saved as PDF, HTML, Word, etc.
+
+My presentations are actually RMarkdown documents:
+
+<div class="fullfig">
+  <img src="10linkage-figures/rmarkdown-screenshot.png" alt="RMarkdown presentation" style="max-height:60%"><br>
+</div>
+
+
+## Working with RMarkdown
+
+Good for:
+
+- **summaries** of your analyses / outcomes of a project
+- exploratory data analysis
+- small exercises
+
+**Not** good for:
+
+- complex, long running analyses
+- complex programming code
+
+&rarr; use R scripts for that
+
+## Working with RMarkdown {.build}
+
+Create a new RMarkdown document (short: *Rmd*) in RStudio with *File > New file > RMarkdown ...*.
+
+&rarr; creates a sample document with explanations and links to RMarkdown documentation
+
+Make sure that Rmd documents are **reproducible**: Select *Run > Restart R and Run All Chunks*.
+
+Free book: [R Markdown: The Definite Guide (Xie et al.)](https://bookdown.org/yihui/rmarkdown/)
+
+## Concluding examples {.smaller}
+
+Bad practice:
+
+```{r, eval=FALSE}
+setwd('C:/Research/Super Interesting Project/Analysis & more/')
+X <- read.csv('cat_research_data.csv',stringsAsFactors =FALSE,
+col.names= c('weight', 'age', 'length_tail'))
+m <- mean(X$var2)
+if (m> 8) {
+print('fat cats!')
+if(m > 12) {print('super fat cats!')}
+}
+S <- X[X$var2 > m,]
+library(ggplot2)
+qplot(S$var2, S$var3)
+```
+
+## Concluding examples {.smaller}
+
+Better practice:
+
+```{r, eval=FALSE}
+# super important cat research script (no need for setwd() -- RStudio project!)
+# author, date
+library(ggplot2)  # put libraries on top
+
+# load the data
+catdata <- read.csv('cat_research_data.csv',
+                    stringsAsFactors = FALSE,
+                    col.names = c('weight', 'age', 'length_tail'))
+
+# calculate mean weight and create subset with obs. where weight > mean weight
+mean_weight <- mean(catdata$weight)
+above_mean <- catdata[catdata$weight > mean_weight,]
+
+if (mean_weight > 8) {  # just to show nested indentation
+  print('fat cats!')
+  if(mean_weight > 12) {
+    print('super fat cats!')
+  }
+}
+
+# scatter plot of above mean data with weight against length of cat's tail
+qplot(above_mean$weight, above_mean$length_tail)
+```
+
+## Tasks {.smaller}
+
+See dedicated tasks sheet on the [tutorial website](https://wzbsocialsciencecenter.github.io/wzb_r_tutorial/).

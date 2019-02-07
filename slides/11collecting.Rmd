@@ -1,0 +1,698 @@
+---
+title: "R Tutorial at the WZB"
+subtitle: "11 – Collecting data from the web"
+author: "Markus Konrad"
+date: "January 24, 2019"
+output:
+  ioslides_presentation:
+    logo: _all/wzbfirmierungquerschwarzmitschrift.png
+    css: _all/custom.css
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(R.options = list(max.print = 50))
+
+library(tidyverse)
+source('apikeys.R')
+```
+
+## Today's schedule
+
+1. Review of last week's tasks
+2. Tapping APIs
+3. Use case: Twitter API
+4. Use case: Geocoding with Google Maps API
+5. Web scraping
+
+# Review of last week's tasks
+
+## Solution for tasks #10
+
+now online on https://wzbsocialsciencecenter.github.io/wzb_r_tutorial/
+
+
+# Tapping APIs
+
+## What is an API? {.build}
+
+- stands for *Application Programming Interface*
+- defined interface for communication between software components
+- *Web* API: provides an interface to structured data from a web service
+
+<div class="fullfig">
+  <img src="11collecting-figures/front-back.png" alt="API as back door" style="max-width:100%">
+</div>
+
+
+## When should I use an API? {.build}
+
+Whenever you need to **collect mass data** in the web in an automated manner.
+
+Whenever you need to **enrich or transform your existing data** with the help of a *web service* (automatted translation, geocoding, ...)
+
+Whenever you want to **run (semi-)automated experiments** in the web (MTurk, Twitter bots, eBay, etc.).
+
+It should definitely be preferred over *web scraping*. (We'll later see why.)
+
+
+## How does a web API work? {.build}
+
+Web APIs usually employ a **client-server model**. The client – that is you. The server provides the *API endpoints* as URLs.
+
+<div class="fullfig">
+  <img src="11collecting-figures/webapi-schema.png" alt="Web API schema" style="max-width:80%">
+</div>
+
+
+## How does a web API work? {.build}
+
+Communication is done with request and response messages over *Hypertext transfer protocol (HTTP)*.
+
+Each HTTP message contains a *header* (message meta data) and a *message body* (the actual content). The three-digit [HTTP status code](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes) plays an important role:
+
+- 2xx: Success
+- 4xx: Client error (incl. the popular *404: Not found* or *403: Forbidden*)
+- 5xx: Server error
+
+The message body contains the requested data in a specific format, often JSON or XML.
+
+
+## Let's query an API {.build .smaller}
+
+We can directly query the [Twitter search API endpoint](https://developer.twitter.com/en/docs/tweets/search/api-reference/get-search-tweets.html).
+
+In your browser: https://api.twitter.com/1.1/search/tweets.json?q=hello
+
+In R:
+
+```{r, message=FALSE}
+library(RCurl)
+
+# add argument verbose = TRUE for full details
+getURL('https://api.twitter.com/1.1/search/tweets.json?q=hello')
+```
+
+&rarr; we get an error because we're not authenticated (we'll do that later).
+
+
+## Reading JSON {.build .smaller}
+
+APIs often return data in [JSON format](http://www.json.org/), which is a nested data format that allows to store key-value pairs and ordered lists of values:
+
+```
+{
+  "profiles": [
+    {
+      "name": "Alice",
+      "age": 52
+    },
+    {
+      "name": "Bob",
+      "age": 35
+    }
+  ]
+}
+```
+
+- example from *abgeordnetenwatch* API: https://www.abgeordnetenwatch.de/api/parliament/bundestag/profile/angela-merkel/profile.json
+- to process with R: [jsonlite package](https://cran.r-project.org/web/packages/jsonlite/index.html)
+- can be viewed in the browser, but requires a browser extension like [JSON Formatter](https://chrome.google.com/webstore/detail/json-formatter/bcjindcccaagfpapjjmafapmmgkkhgoa) to make it actually readable
+
+
+## Examples of popular APIs {.smaller .build}
+
+Social media:
+
+- [Twitter](https://developer.twitter.com/)
+- [Facebook Graph API](https://developers.facebook.com/docs/graph-api/) (restricted to own account and public pages)
+- [YouTube (Google)](https://developers.google.com/youtube/)
+- [LinkedIn](https://www.linkedin.com/developers/)
+
+Google (see [API explorer](https://developers.google.com/apis-explorer/)):
+
+- [Cloud](https://cloud.google.com/) (Translation / NLP / Speech / Vision / ...)
+- [Maps (now also part of cloud platform)](https://cloud.google.com/maps-platform/) (geocoding, directions, places, etc.)
+- [Civic Information](https://developers.google.com/civic-information/) (political representation, voting locations, election results, ...)
+- [Books](https://developers.google.com/books/)
+
+Other:
+
+[Microsoft Face API](https://www.microsoft.com/cognitive-services/en-us/face-api), [Amazon Mechanical Turk API](https://docs.aws.amazon.com/AWSMechTurk/latest/AWSMturkAPI/Welcome.html), [Wikipedia](https://en.wikipedia.org/wiki/Help:Creating_a_bot#APIs_for_bots), etc.
+
+For more, see [programmableweb.com](http://www.programmableweb.com/).
+
+
+## What's an "API wrapper package"? {.build}
+
+Working with a web API involves:
+
+- constructing request messages
+- parsing result messages
+- handling errors
+
+&rarr; much implementation effort necessary.
+
+For popular web services there are already "API wrapper packages" on CRAN:
+
+- implement communication with the server
+- provide direct access to the data via R functions
+- examples: *rtweet*, *ggmap* (geocoding via Google Maps), *wikipediR*, *genderizeR*
+
+## Access to web APIs {.build}
+
+Most web services require you to set up a user account on their platform.
+
+Many web services provide a free subscription to their services with **limited access** (number of requests and/or results is limitted) and a paid subscription as "premium access" or as usage-dependent payment model. Some services (like Google Cloud Platform) require you to register with credit card information and grant a monthly free credit (e.g. $300 for Translation API at the moment).
+
+In both cases you're required to authenticate with the service when you use it (&rarr; **API key** or **authorization token**).
+
+
+## A few warning signs {.build .smaller}
+
+Always be aware that you're using a web service, i.e. **you're sending (parts of) your data to some company's server.**
+
+Using a web API is a complex and often long running task. Be aware that many things can go wrong, e.g.:
+
+- the server delivers garbage
+- the server crashes
+- your internet connection is lost
+- your computer crashes
+- your script produces an endless loop
+
+&rarr; **never** blindly trust what you get<br>
+&rarr; **always** do validity checks on the results (check NAs, ranges, duplicates, etc.)<br>
+&rarr; use *defensive programming* (e.g. save intermediate results to disk; implement wait & retry mechanisms on failures; etc.)
+
+
+# Use case: Twitter API
+
+## Which APIs does Twitter provide? {.build}
+
+Twitter provides several APIs. They are documented at https://developer.twitter.com/en/docs
+
+The most important APIs for us are the **"Search API" (aka REST API)** and **"Realtime API" (aka Streaming API)**.
+
+
+## Free vs. paid {.build}
+
+Twitter provides [three subscription levels](https://developer.twitter.com/en/pricing):
+
+- Standard (free)
+    - search historical data for up to 7 days
+    - get sampled live tweets
+- Premium ($150 to $2500 / month)
+    - search historical data for up to 30 days
+    - get full historical data per user
+- Enterprise (special contract with Twitter)
+    - full live tweets
+
+The *rate limiting* also differs per subscription level (number of requests per month).
+
+
+## What else do I need? {.build .smaller}
+
+1. A Twitter account
+2. Authentication data for a "Twitter app"
+    - create your Twitter app on https://apps.twitter.com/
+    - retrieve four authentication keys:
+
+<div class="fullfig">
+  <img src="11collecting-figures/wzb-twitter-keys.png" alt="Twitter keys for app" style="max-width:80%">
+</div>
+
+
+## What else do I need? {.build .smaller}
+
+<br><br><br><br>
+
+<center style="font-weight:bold">Keep your authentication keys safe!</center>
+
+<br>
+
+<center style="font-weight:bold">Do not publish them anywhere!</center>
+
+## R Packages for the Twitter API {.build}
+
+Several "API wrapper" packages for Twitter exist on CRAN:
+
+- *[twitteR](https://cran.r-project.org/web/packages/twitteR/index.html):* Search API only
+- *[streamR](https://cran.r-project.org/web/packages/streamR/index.html):* Streaming API only
+- *[rtweet](https://cran.r-project.org/web/packages/rtweet/index.html):* both APIs
+
+I'll use *rtweet* on the following slides.
+
+## Creating an authentication token {.build .smaller}
+
+```{r, echo=FALSE, message=FALSE, error=FALSE}
+library(rtweet)
+
+token <- create_token(
+    app = "WZBAnalysis",
+    consumer_key = consumer_key,
+    consumer_secret = consumer_secret,
+    access_token = access_token,
+    access_secret = access_secret)
+```
+
+You need to construct an authentication token and provide the keys from the "Twitter Apps" page:
+
+```{r, eval=FALSE}
+library(rtweet)
+
+token <- create_token(
+    app = "WZBAnalysis",
+    consumer_key = "...",
+    consumer_secret = "...",
+    access_token = "...",
+    access_secret = "...")
+```
+
+## Searching tweets {.build .smaller}
+
+Sample of 10 tweets (excluding retweets) from the last 7 days containing "#wzb":
+
+```{r, message=FALSE}
+tw_search_wzb <- search_tweets('#wzb', n = 10, include_rts = FALSE)
+# display only 3 out of 88 variables:
+tw_search_wzb[c('screen_name', 'created_at', 'text')]
+```
+
+## Retrieve timelines for selected users {.build .smaller}
+
+Retrieve 10 latest tweets from timelines of selected users:
+
+```{r, message=FALSE}
+tw_timelines <- get_timelines(c("WZB_Berlin", "JWI_Berlin", "DIW_Berlin"), n = 10)
+
+tw_timelines %>%   # "favorite_count" is number of likes:
+  select(screen_name, favorite_count, retweet_count, text) %>% 
+  group_by(screen_name) %>%
+  arrange(screen_name, desc(favorite_count)) %>%
+  top_n(3)
+```
+
+## Sending a tweet {.build}
+
+Posting a tweet to the timeline of your "app" account:
+
+```{r, eval=FALSE}
+rand_nums <- round(runif(2, 0, 100))
+# sprintf creates a character string by filling in placeholders
+new_tweet <- sprintf('Hello world, it is %s and %d + %d is %d.',
+                     Sys.time(), rand_nums[1], rand_nums[2],
+                     sum(rand_nums))
+post_tweet(new_tweet)
+
+## your tweet has been posted!
+```
+
+<br>&rarr; will be posted on [twitter.com/WZBAnalysis](https://twitter.com/WZBAnalysis)
+
+
+## Live streaming {.build .smaller}
+
+Live streaming of tweets is especially practical when run during events of interest (elections, demonstrations, etc.). This is because Twitter only allows limited download of historical data (see "Free vs. paid" slide before). So always try to collect the data during an event!
+
+Realtime retrieval of tweets from **sampled** live stream. By default, this will collect tweets for 30 seconds according to optional search criteria:
+
+```{r, eval=FALSE}
+stream_ht2019 <- stream_tweets('#2019')
+
+# Streaming tweets for 30 seconds...
+# Finished streaming tweets!
+```
+
+<br>&rarr; results in data frame with 88 variables as with previous functions.
+
+## Live streaming {.build .smaller}
+
+A practical way to collect tweets during events is to specify the recording length and let the tweets be written to a file:
+
+```{r, eval=FALSE}
+stream_tweets(
+  "oscars,academy,awards",
+  timeout = 60 * 60 * 24 * 7,    # record tweets for 7 days (specified in seconds)
+  file_name = "awards.json",
+  parse = FALSE
+)
+```
+
+<br>Make sure you have enough disk space and that the internet connection is stable!
+
+After recording, load the data file as data frame:
+
+```{r, eval=FALSE}
+awards <- parse_stream("awards.json")
+```
+
+<br>For more functions, see the [introductionary vignette to rtweet](https://cran.r-project.org/web/packages/rtweet/vignettes/intro.html).
+
+
+# Use case: Geocoding with Google Maps API
+
+## What is geocoding? {.build}
+
+**Geocoding** is the process of finding the geographic coordinates (longitude, latitude) for a specific query term (a full address, a postal code, a city name etc.).
+
+**Reverse geocoding** tries to map a set of geographic coordinates to a place name / address.
+
+## Getting access
+
+As of June 2018, the Maps API is part of Google's "Could Platform". This requires you to have:
+
+1. A Google account (surprise!).
+2. Start a [Google Cloud Platform (GCP)](https://cloud.google.com/) free trial (valid for one year).
+3. Register for billing (they want your credit card).<br>
+    They promise not to charge it after the end of the free trial...
+
+Inside GCP, you can go to *APIs & Services > Credentials* to get your API key.
+
+
+## Using *ggmap* for geocoding {.build .smaller}
+
+You need to install the package *ggmap*, at least of version 2.7.
+
+```{r, message=FALSE}
+library(ggmap)
+
+# provide the Google Cloud API key here:
+register_google(key = google_cloud_api_key)
+
+places <- c('Berlin', 'Leipzig', '10317, Deutschland',
+            'Reichpietschufer 50, 10785 Berlin')
+place_coords <- geocode(places) %>% mutate(place = places)
+place_coords
+```
+
+
+## Reverse geocoding {.build .smaller}
+
+Take the WZB's geo-coordinates and see if we can find the address to it:
+
+```{r, message=FALSE}
+# first longitude, then latitude
+revgeocode(c(13.36509, 52.50640))
+```
+
+<br>Tweets also sometimes come with geo-coordinates. With reverse geocoding it is possible to find out from which city a tweet was sent.
+
+
+# Web scraping
+
+## What is web scraping? {.build}
+
+Web scraping is the process of **extracting data from websites** for later retrieval or analysis.
+
+→ usually done as automated process by a web crawler, web spider or bot:
+
+1. Fetch website (i.e. download its content)
+2. Extract the parts in which you're interested and store them
+3. Optionally follow links to other website → start again with 1.
+
+Google and other search engines do it all the time in a big scale – Google: ["Our index is well over 100,000,000 gigabytes"](https://www.google.com/insidesearch/howsearchworks/crawling-indexing.html)
+
+## What is web scraping? {.build}
+
+The problem: this huge amount of data is **largely unstructured**.
+
+Web scraping or web mining tries to **extract structured information** from this mess.
+
+## When should I use web scraping? {.build}
+
+Web scraping should be your **last resort** if you can't get the data otherwise (we'll see why).
+
+1. Check for access to structured data (APIs, databases, RSS feeds) or already implemented scrapers (packages on CRAN...)
+2. Ask the website owner
+3. Consider the implementation work when scraping multiple or very complex websites
+    - check aggregator websites
+    - consider manual data collection and/or sampling
+
+## Legal issues {.build}
+
+Web scraping might lead to (among others):
+
+- Copyright infringement
+- Violation of the Computer Fraud and Abuse Act (US)
+
+Depends mainly on:
+
+- what the website's **Terms and Conditions** say
+- how scraped data is used
+- how scraping is done
+
+
+## Some general rules {.build}
+
+- check the Terms and Conditions and the *robots.txt* file
+- do not publish the scraped data unless you have got the permission
+- do not crush the website's servers with requests
+- when unsure: ask the website owner and/or a lawyer
+
+## robots.txt
+
+- specifies how a web crawler (e.g. Google "web spider") should behave when visiting the website
+- respect it!
+- located at domain.com**/robots.txt**
+- excerpt from https://wzb.eu/robots.txt:
+
+```
+User-agent: *
+Crawl-delay: 10
+# Directories
+Disallow: /includes/
+...
+```
+
+- do not crawl anything under https://wzb.eu/includes/ <br>
+- use a delay of 10 seconds between subsequent requests
+
+
+## HTTP again {.build}
+
+Again, we have a **client-server model**:
+
+<div class="fullfig">
+  <img src="11collecting-figures/accessing_website.png" alt="accessing website schema" style="max-width:70%">
+</div>
+
+This is very similar to the Web API concept (we use the same HTTP protocol), only that the server delivers *HTML* content this time.
+
+## HTTP again {.build .smaller}
+
+In R:
+
+```{r}
+library(httr)
+response <- GET('https://wzb.eu')
+response
+```
+
+## Technical problem #1 {.build}
+
+**Too many HTTP requests.**
+
+**The webserver may notice when you send too many requests in a small amount of time.**
+
+It might be considered as an attack (DoS – Denial of Service attack) and your IP gets blocked for some time.
+
+Solution: Use delays during requests (for example with `Sys.sleep()`)
+
+→ You will need patience when you crawl many web pages!
+
+## A look at the HTML code {.build .smaller}
+
+HTML (Hypertext Markup Language) describes the structure of a website, e.g.:
+
+- Which part of the website represents the main content?
+- What is the navigation menu?
+- What is the headline of an article inside the main content area?
+
+Represented as nested *tags* with *attributes*:
+
+```
+<body>
+  <nav width="100%"> ... </nav>
+  <article>
+    <h1>Some headline</h1>
+    <img src="some_image.png" alt="My image" />
+  </article>
+</body>
+```
+
+- tags are written as `<tag> ... </tag>`
+- attributes of tags are written as `<tag attrib="value"> ... </tag>`
+
+
+## Technical problem #2 {.build}
+
+**Two websites rarely have the same HTML structure.**
+
+Examples:
+
+* https://www.diw.de/de
+* https://www.leibniz-gemeinschaft.de/start/
+
+Both websites have news but the HTML structure is completely different &rarr; specific data extraction instructions for both websites necessary
+
+## Technical problem #2 {.build}
+
+Pages on a single website with the same "page type" usually share the same structure, e.g.:
+
+- all Wikipedia articles have similar HTML structure
+- all WZB news articles have similar HTML structure
+
+It's very hard to do web scraping on a big range of different websites.
+
+→ before you start a project assess the HTML code of the websites → try to find similarities
+
+→ try to find aggregator websites, public databases or similar platforms that gather information from different websites
+
+## Technical problem #3 {.build}
+
+**Websites can get very complex**
+
+- more and more "interactive" / "dynamic" content on websites featuring JavaScript
+- data is loaded dynamically/asynchronously into websites
+
+Example: Pages that load more articles when you scroll down (Facebook!)
+
+→ what you see in your browser might not be what get when crawling the website!
+
+Solutions: Automated web browsers, e.g. via [Selenium](https://docs.seleniumhq.org/) → quite complex to implement
+
+## Technical problem #4
+
+**Websites change -- They do relaunches or disappear.**
+
+- no guarantee that the website you scrape today will have the same HTML structure tomorrow 
+- problem when monitoring websites for a long time (i.e. longitudinal research)
+
+Sometimes it is possible to recover websites from the [Internet Archive](https://archive.org/).
+
+
+## Scraping abgeordnetenwatch.de {.build}
+
+> On [abgeordnetenwatch.de](https://www.abgeordnetenwatch.de/) (which translates as “member of parliament watch”) users find a blog, petitions and short profiles of their representatives in the federal parliament as well as on the state and EU level.
+> <br><br>-- [source](https://www.abgeordnetenwatch.de/ueber-uns/mehr/international)
+
+Example: Research on Twitter networks among MPs &rarr; find Twitter name for each MP.
+
+abgeordnetenwatch.de links to Twitter account on MP's profiles, see for example:
+
+https://www.abgeordnetenwatch.de/profile/christian-lindner *
+
+
+<small>* Personal remark: I'm no CL fanboy, I was just sure that he has a Twitter account...</small>
+
+
+## Scraping abgeordnetenwatch.de {.build .smaller}
+
+First: Check if we can avoid scraping!
+
+&rarr; they provide an API: https://www.abgeordnetenwatch.de/api; all profiles of MPs are at: https://www.abgeordnetenwatch.de/api/parliament/bundestag/deputies.json
+
+<div class="fullfig" style="width:60%; float:left">
+  <img src="11collecting-figures/abgwatch_profile_json.png" alt="profile JSON excerpt" style="max-width:100%">
+</div>
+
+<div style="width:40%;float:right"><p>Unfortunately, no link to Twitter in the data from the API!</p><p>We could ask the owners of the website if they want to provide the data, but let's use this website as illustrative example for web scraping.</p></div>
+
+<div style="clear:both"></div>
+
+## Extracting specific data from HTML {.build}
+
+For web scraping, we need to:
+
+1. identify the elements of a website which contain our information of interest;
+2. extract the information from these elements;
+
+**Both steps require some basic understanding of HTML and CSS.** More advanced scraping techniques require an understanding of *XPath* and *regular expressions*.
+
+We won't cover any of these here, but I will give you a short example trying to show the basics.
+
+
+## Inspecting the HTML source {.build .smaller}
+
+A different profile, this time with many links (Facebook, Wikipedia, Twitter, etc): https://www.abgeordnetenwatch.de/profile/lars-klingbeil
+
+In a browser, right click on the element of interest and select "Inspect". This opens a new pane on the right side which helps to navigate through the HTML tags and find a *CSS selector* for that element. This gives us a "path" to that element.
+
+<div class="fullfig"">
+  <img src="11collecting-figures/scraping_inspect.png" alt="inspect website" style="max-width:100%">
+</div>
+
+## Extracting specific data from HTML {.build .smaller}
+
+<div class="fullfig"">
+  <img src="11collecting-figures/scraping_inspect.png" alt="inspect website" style="max-width:65%">
+</div>
+
+The crucial information for the "path" to the elements of interest, which is the links specified by an `<a>...</a>` tag, is:
+
+- `<div>` container with class attribute `"deputy__custom-links"`
+- inside this, a list `<ul>` with class attribute `"link-list"`
+- inside this, list elements `<li>`
+- inside this, the links `<a>` that we want
+
+
+## Extracting specific data from HTML {.build .smaller}
+
+We can now use this information in R. The package `rvest` is made for parsing HTML and extracting content from specific elements. First, we download the HTML source and parse it via `read_html`:
+
+```{r, message=FALSE}
+library(rvest)
+
+html <- read_html('https://www.abgeordnetenwatch.de/profile/lars-klingbeil')
+html
+```
+
+## Extracting specific data from HTML {.build .smaller}
+
+We apply the CSS selector (the "path" to the links) in order to extract only the specific link elements of the website:
+
+```{r}
+links <- html_nodes(html, 'div.deputy__custom-links ul.link-list li a')
+links
+```
+
+## Extracting specific data from HTML {.build .smaller}
+
+And finally, we extract only the value of each link's `href` attribute in order to get the actual URLs:
+
+```{r}
+urls <- html_attr(links, 'href')
+urls
+```
+
+## Extracting specific data from HTML {.build .smaller}
+
+In order to select only the link to Twitter and extract the Twitter name from there, we can apply a *regular expression*. Note that this is a quiet advanced topic. The gist is that you can create character string patterns and extract specified key information if this pattern matches:
+
+```{r}
+# a pattern that matches:
+#   http://twitter.com/user
+#   https://twitter.com/user
+#   http://www.twitter.com/user
+#   https://www.twitter.com/user
+# and extracts the "user" part
+matches <- regexec('^https?://(www\\.)?twitter\\.com/([A-Za-z0-9_-]+)/?', urls)
+twitter_name <- sapply(regmatches(urls, matches),  # the "user" part is number 3
+                       function(s) { if (length(s) == 3) s[3] else NA })
+twitter_name[!is.na(twitter_name)]
+```
+
+## Final words on web scraping {.build}
+
+This whole process can be applied to all MPs (whose profile URLs we can get from the *abgeordnetenwatch.de* API). If we obey to the crawl limit of 1 request per 10 seconds as specified in their *robots.txt* file, it would take about 2h to fetch the profile pages of all 708 MPs and extract the Twitter name from it.
+
+**You can see that web scraping is really a powerful tool for automated data extraction from websites, but also that it involves much programming effort and many things can go wrong (see legal and technical issues slides before).**
+
+## Literature
+
+- Munzert et al. 2015: Automated Data Collection with R
+- Matthew A. Russel 2014: Mining the Social Web *(uses Python)*
+- H. Wickham: [Scraping with rvest and "SelectorGadget"](https://cran.r-project.org/web/packages/rvest/vignettes/selectorgadget.html)
+
+## Tasks {.smaller}
+
+See dedicated tasks sheet on the [tutorial website](https://wzbsocialsciencecenter.github.io/wzb_r_tutorial/).

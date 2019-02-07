@@ -1,0 +1,443 @@
+---
+title: "R Tutorial at the WZB"
+subtitle: "6 - Recap Quiz"
+author: "Markus Konrad"
+date: "November 29, 2018"
+output:
+  ioslides_presentation:
+    logo: _all/wzbfirmierungquerschwarzmitschrift.png
+    css: _all/custom.css
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(R.options = list(max.print = 60))
+```
+
+
+
+# Recap quiz
+
+## Recap quiz
+
+A small R quiz to check yourself.
+
+## Data types
+
+You have survey data where participants express their consent on something with a five level score from *"I totally agree"* (5) to *"I totally disagree"* (1). Which data type would you choose to store this data?
+
+- A: Character string vector
+- B: Factor with 5 levels
+- C: Numeric (integer) vector with values from 1 to 5
+- D: Ordered factor with 5 *ordered* levels from 1 to 5
+
+<small>Multiple options may apply.</small>
+
+## Data types
+
+You have survey data where participants express their consent on something with a five level score from *"I totally agree"* (5) to *"I totally disagree"* (1). Which data type would you choose to store this data?
+
+- A: Character string vector
+- B: Factor with 5 levels
+- **C: Numeric (integer) vector with values from 1 to 5✓**
+- **D: Ordered factor with 5 *ordered* levels from 1 to 5✓**
+
+
+## What could be the problem...
+
+What could be the problem, if you get an error message like this:
+
+`Error in ...() : could not find function "..."`
+
+- A: I made a typo in the function call.
+- B: Something's wrong with my R installation. I have to re-install R.
+- C: There's simply no such function and I either have to define one myself or find and load a package that contains it.
+- D: I forgot to load a package with `library()`.
+
+<small>Multiple options may apply.</small>
+
+## What could be the problem...
+
+What could be the problem, if you get an error message like this:
+
+`Error in ...() : could not find function "..."`
+
+- **A: I made a typo in the function call. ✓**
+- B: Something's wrong with my R installation. I have to re-install R.
+- **C: There's simply no such function and I either have to define one myself or find and load a package that contains it. ✓**
+- **D: I forgot to load a package with `library()`. ✓**
+
+## You have the following data...
+
+You have the following data stored in an object `smoker`:
+
+```{r, echo=FALSE}
+(smoker <- c(TRUE, NA, NA, TRUE, FALSE, FALSE, FALSE, TRUE, NA))
+```
+
+What's the correct way of finding out the **portion of `NA`s in percent?**
+
+- A: `mean(is.na(smoker)) * 100`
+- B: `mean(smoker * 100, na.rm = TRUE)`
+- C: `sum(!is.na(smoker)) / length(smoker) * 100`
+- D: `sum(is.na(smoker)) / length(smoker) * 100`
+
+<small>Multiple options may apply.</small>
+
+## You have the following data...
+
+You have the following data stored in an object `smoker`:
+
+```{r, echo=FALSE}
+(smoker <- c(TRUE, NA, NA, TRUE, FALSE, FALSE, FALSE, TRUE, NA))
+```
+
+What's the correct way of finding out the **portion of `NA`s in percent?**
+
+- **A: `mean(is.na(smoker)) * 100` ✓**
+- B: `mean(smoker * 100, na.rm = TRUE)`
+- C: `sum(!is.na(smoker)) / length(smoker) * 100`
+- **D: `sum(is.na(smoker)) / length(smoker) * 100` ✓**
+
+## Logic {.smaller}
+
+Assume you have the following data:
+
+```{r}
+age <- c(20, 35, 19, 51, 20)
+smoker <- c(TRUE, TRUE, FALSE, TRUE, FALSE)
+country <- factor(c('USA', 'GB', 'GB', 'DE', 'USA'))
+```
+
+<br>
+What's the correct logical expression for "all from the US or any non-smokers younger than 30"?
+
+- A: `country == 'USA' & (!smoker | age < 30)`
+- B: `(!smoker & age < 30) | country == 'USA'`
+- C: `country == 'USA' | (!smoker & age < 30)`
+- D: `country == 'USA' & (country != 'USA' & smoker & age < 30)`
+
+<small>Multiple options may apply.</small>
+
+## Logic {.smaller}
+
+Assume you have the following data:
+
+```{r}
+age <- c(20, 35, 19, 51, 20)
+smoker <- c(TRUE, TRUE, FALSE, TRUE, FALSE)
+country <- factor(c('USA', 'GB', 'GB', 'DE', 'USA'))
+```
+
+<br>
+What's the correct logical expression for "all from the US or any non-smokers younger than 30"?
+
+- A: `country == 'USA' & (!smoker | age < 30)`
+- **B: `(!smoker & age < 30) | country == 'USA'` ✓**
+- **C: `country == 'USA' | (!smoker & age < 30)` ✓**
+- D: `country == 'USA' & (country != 'USA' & smoker & age < 30)`
+
+## What's wrong here?
+
+Find three problems within this code:
+
+```{r, eval=FALSE}
+x <- c(4, 2, -2, 1 -3, 4, 1)
+2nd_object <- sum(x[(x >= 2)]
+```
+
+## What's wrong here?
+
+Find three problems within this code:
+
+```{r, eval=FALSE}
+x <- c(4, 2, -2, 1 -3, 4, 1)
+2nd_object <- sum(x[(x >= 2)]
+```
+
+<br>
+
+- a comma is probably missing in the `x` vector <br> c(4, 2, -2, 1**,** -3, 4, 1)
+- you can't name an object `2nd_object` (objects are not allowed to start with digits)
+- the last closing paranthesis for `sum()` is missing
+
+## Transforming data frames {.smaller}
+
+Consider the `airquality` data set:
+
+```{r}
+head(airquality, 3)
+```
+
+What will be the output of the following statement:
+
+```{r, eval=FALSE}
+arrange(select(airquality, Ozone, Wind), desc(Wind))
+```
+<br>
+
+- A: We'll get an error message.
+- B: A subset of `airquality` containing only the variables `Ozone` and `Wind` and additionally a description of the `Wind` variable.
+- C: A subset of `airquality` containing only the variables `Ozone` and `Wind`, ordered by `Wind` in descending order.
+- D: A subset of `airquality` where we select only non-NA observations from `Ozone` and `Wind`, additionally ordered by `Wind`.
+
+
+## Transforming data frames {.smaller}
+
+Consider the `airquality` data set:
+
+```{r}
+head(airquality, 3)
+```
+
+What will be the output of the following statement:
+
+```{r, eval=FALSE}
+arrange(select(airquality, Ozone, Wind), desc(Wind))
+```
+<br>
+
+- A: We'll get an error message.
+- B: A subset of `airquality` containing only the variables `Ozone` and `Wind` and additionally a description of the `Wind` variable.
+- **C: A subset of `airquality` containing only the variables `Ozone` and `Wind`, ordered by `Wind` in descending order. ✓**
+- D: A subset of `airquality` where we select only non-NA observations from `Ozone` and `Wind`, additionally ordered by `Wind`.
+
+
+## Job application data {.smaller}
+
+You have the following job application data in a data frame named `appl`:
+
+```{r, echo=FALSE}
+(appl <- data.frame(application_id = 1:7,
+                    gender = factor(c('f', 'f', 'm', NA, 'm', 'x', 'f')),
+                    success = c(TRUE, FALSE, TRUE, TRUE, TRUE, NA, FALSE)))
+```
+
+What would be your steps to find the **ratio of successful applications of women** (denoted as `f` in `gender` variable)? Don't write code, describe the steps and the functions you would use. Describe how you handle the occurrence of NAs.
+
+## Job application data {.smaller}
+
+You have the following job application data in a data frame named `appl`:
+
+```{r, echo=FALSE}
+(appl <- data.frame(application_id = 1:7,
+                    gender = factor(c('f', 'f', 'm', NA, 'm', 'x', 'f')),
+                    success = c(TRUE, FALSE, TRUE, TRUE, TRUE, NA, FALSE)))
+```
+
+What would be your steps to find the **ratio of successful applications of women** (denoted as `f` in `gender` variable)?
+
+1. Get the number of female applicants by using `sum()` on a logical expression `appl$gender == 'f'` and setting `sum()` to ignore NAs (use `na.rm = TRUE` parameter).
+2. Get the number of *successful* female applicants by subsetting the `success` variable with the same logical expression as in step 1 and then using `sum()` to count the successes (again, use `na.rm = TRUE` parameter).
+3. Divide the number of successful female applicants by the total number of female applicants.
+
+<div class="notes">
+
+```{r}
+n_fem <- sum(appl$gender == 'f', na.rm = TRUE)
+n_success_fem <- sum(appl$success[appl$gender == 'f'], na.rm = TRUE)
+n_success_fem / n_fem
+```
+</div>
+
+
+## Finding out the data type
+
+How can you find out the data type of an object `x`?
+
+- A: `type(x)`
+- B: `typeof(x)`
+- C: `class(x)`
+- D: `help(x)`
+
+<small>Multiple options may apply.</small>
+
+## Finding out the data type
+
+How can you find out the data type of an object `x`?
+
+- A: `type(x)`
+- B: `typeof(x)`
+- **C: `class(x)` ✓**
+- D: `help(x)`
+
+## Finding out the structure of a data frame
+
+How can you find out the structure of a data frame `x`, i.e. an information showing its number of variables and observations and the data type of each variable?
+
+- A: `str(x)`
+- B: `help(x)`
+- C: `info(x)`
+- D: `summary(x)`
+
+<small>Multiple options may apply.</small>
+
+## Finding out the structure of a data frame
+
+How can you find out the structure of a data frame `x`, i.e. an information showing its number of variables and observations and the data type of each variable?
+
+- **A: `str(x)` ✓**
+- B: `help(x)`
+- C: `info(x)`
+- D: `summary(x)`
+
+## You have the following data...
+
+You have the following data in an object `score`:
+
+```{r, echo=FALSE}
+(score <- c('3', '1', '1', '2', '3', '5'))
+```
+
+You want to know the mean score. Why does `mean(score)` not work? How can you make it work?
+
+## You have the following data...
+
+You have the following data in an object `score`:
+
+```{r, echo=FALSE}
+(score <- c('3', '1', '1', '2', '3', '5'))
+```
+
+You want to know the mean score. Why does `mean(score)` not work? How can you make it work?
+
+It doesn't work because `score` is not numeric but a character string vector. We have to convert it first:
+
+```{r}
+mean(as.numeric(score))    # as.integer() would also be fine here
+```
+
+## Getting help
+
+How do you look up the R help page for the function `mean()`?
+
+- A: `google(mean)`
+- B: `?mean`
+- C: `help(mean)`
+- D: `summary(mean)`
+
+<small>Multiple options may apply.</small>
+
+## Getting help
+
+How do you look up the R help page for the function `mean()`?
+
+- A: `google(mean)`
+- **B: `?mean` ✓**
+- **C: `help(mean)` ✓**
+- D: `summary(mean)`
+
+## What's the result...
+
+What's the result of the following statement:
+
+`sum(3:0)`
+
+- A: It's undefined.
+- B: 6.
+- C: A vector containing 3 and 0.
+- D: 0.
+
+<small>Multiple options may apply.</small>
+
+## What's the result...
+
+What's the result of the following statement:
+
+`sum(3:0)`
+
+- A: It's undefined.
+- **B: 6. ✓**
+- C: A vector containing 3 and 0.
+- D: 0.
+
+## Logic
+
+What's the difference between a logical expression (like `x > 5`) and a logical vector (like `c(TRUE, TRUE, FALSE, TRUE)`)?
+
+- A: a logical vector can be the result of a logical expression
+- B: there is no difference
+- C: I can only subset with a logical vector, not with a logical expression
+- D: a logical expression can be the result of a logical vector
+
+<small>Multiple options may apply.</small>
+
+## Logic
+
+What's the difference between a logical expression (like `x > 5`) and a logical vector (like `c(TRUE, TRUE, FALSE, TRUE)`)?
+
+- **A: a logical vector can be the result of a logical expression ✓**
+- B: there is no difference
+- C: I can only subset with a logical vector, not with a logical expression
+- D: a logical expression can be the result of a logical vector
+
+## Indexing
+
+Assume you have the following vector `x`:
+
+```{r}
+(x <- letters[1:7])
+```
+
+What's the output of the statement `x[-c(2:4)]`?
+
+- A: `"a" "e" "f" "g"`
+- B: `"b" "c" "d"`
+- C: `"a" "c" "e" "f" "g"`
+- D: No output, the statement is invalid R code.
+
+## Indexing
+
+Assume you have the following vector `x`:
+
+```{r}
+(x <- letters[1:7])
+```
+
+What's the output of the statement `x[-c(2:4)]`?
+
+- **A: `"a" "e" "f" "g"` ✓**
+- B: `"b" "c" "d"`
+- C: `"a" "c" "e" "f" "g"`
+- D: No output, the statement is invalid R code.
+
+## Subsetting data frames {.smaller}
+
+Consider the `airquality` data set:
+
+```{r}
+head(airquality, 3)
+```
+
+What's the effect of the following statement (assuming that we already loaded the required packages)?
+
+```{r, eval=FALSE}
+filter(airquality, Month = 5, Day != 2)
+```
+<br>
+
+- A: We'll get a subset of the data frame containing only the `Month` and `Day` variables.
+- B: We'll get a subset of the data frame only with observations from May, additionally excluding the 2nd of May.
+- C: We'll get an error message.
+- D: We'll get an empty result data frame.
+
+
+## Subsetting data frames {.smaller}
+
+Consider the `airquality` data set:
+
+```{r}
+head(airquality, 3)
+```
+
+What's the effect of the following statement (assuming that we already loaded the required packages)?
+
+```{r, eval=FALSE}
+filter(airquality, Month = 5, Day != 2)
+```
+<br>
+
+- A: We'll get a subset of the data frame containing only the `Month` and `Day` variables.
+- B: We'll get a subset of the data frame only with observations from May, additionally excluding the 2nd of May.
+- **C: We'll get an error message. ✓**
+- D: We'll get an empty result data frame.
+

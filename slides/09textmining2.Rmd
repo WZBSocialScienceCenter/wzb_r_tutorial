@@ -1,0 +1,527 @@
+---
+title: "R Tutorial at the WZB"
+subtitle: "09 - Text mining II"
+author: "Markus Konrad"
+date: "January 10, 2019"
+output:
+  ioslides_presentation:
+    logo: _all/wzbfirmierungquerschwarzmitschrift.png
+    css: _all/custom.css
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(R.options = list(max.print = 150))
+
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+
+
+plot_dtm_heatmap <- function(dtm, xlabel = NULL, ylabel = 'document', value_labels_size = 4) {
+  orig_rownames <- rownames(dtm)
+  if (is.null(orig_rownames)) {
+    row_names <- as.character(1:nrow(dtm))
+  } else {
+    row_names <- orig_rownames
+  }
+  
+  df <- as.data.frame(dtm)
+  df$row_names <- row_names
+  df <- df %>% gather(key = 'term', value = 'n', -row_names)
+  
+  if (!('term') %in% colnames(df) && 'V1' %in% colnames(df)) {
+    df$term <- 1
+    df$n <- df$V1
+  }
+  
+  ggplot(df, aes(x = term, y = row_names, fill = n)) +
+    geom_tile(color = 'white', size = 1.5) +
+    geom_text(aes(x = term, y = row_names, label = n), size = value_labels_size) +
+    xlab(xlabel) +
+    ylab(ylabel) +
+    scale_fill_distiller(guide = FALSE) +
+    scale_y_discrete(limits = rev(row_names)) +
+    coord_fixed() +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+}
+
+plot_dist_heatmap <- function(distmat, value_labels_size = 3) {
+  df <- as.data.frame(distmat)
+  row_names <- rownames(distmat)
+  df$row_names <- row_names
+  df <- df %>% gather(key = 'doc', value = 'distval', -row_names) %>% mutate(distval_lbl = as.character(round(distval, 2)))
+  
+  ggplot(df, aes(x = doc, y = row_names, fill = distval)) +
+    geom_tile(color = 'white', size = 1.5) +
+    geom_text(aes(x = doc, y = row_names, label = distval_lbl), size = value_labels_size) +
+    scale_fill_distiller(guide = FALSE) +
+    scale_y_discrete(limits = rev(row_names)) +
+    xlab(NULL) + ylab(NULL) +
+    coord_fixed() +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+}
+```
+
+
+## Today's schedule
+
+1. Short recap
+2. Practical text mining with the `tm` package (II)
+3. Document similarity
+<!--4. Optional: Short introduction to Topic modeling
+5. Optional: Short introduction to the `tidytext` package-->
+
+# Short recap
+
+# Practical text mining with the `tm` package
+
+## The `tm` package
+
+- extensive set of tools for text mining in R
+- developed since 2008 by Feinerer et al.
+
+Resources to start:
+
+- [package overview on CRAN](https://cran.r-project.org/web/packages/tm/index.html)
+- [Introduction to the tm Package](https://cran.r-project.org/web/packages/tm/vignettes/tm.pdf)
+
+I will demonstrate how to use the package to investigate word frequency and document similarity.
+
+## Creating a corpus {.smaller .build}
+
+A corpus contains the raw text for each document (identified by a document ID).
+
+The base class is `VCorpus` which can be initialized with a data source.
+
+Read plain text files from a directory:
+
+```{r, eval=FALSE}
+corpus <- VCorpus(DirSource('path/to/documents', encoding = 'UTF-8'),
+                  readerControl = list(language = 'de'))  # default language is 'en'
+```
+<br>
+
+- `encoding` specifies the text format &rarr; important for special characters (like German umlauts)
+- many file formats supported (Word documents, PDF documents, etc.)
+
+
+## Creating a corpus {.smaller .build}
+
+A data frame can be converted to a corpus, too. It must contain at least the columns `doc_id`, `text`:
+
+```{r, eval=FALSE}
+df_texts
+##  doc_id  text                                           date 
+##  <chr>   <chr>                                          <chr>
+## 1 Grüne   "A. EINLEITUNG\nLiebe Bürgerinnen und Bürger,… 2017…
+## 2 Linke   "Die Zukunft, für die wir kämpfen: SOZIAL. GE… 2017…
+## 3 SPD     "Es ist Zeit für mehr Gerechtigkeit!\n2017 is… 2017…
+```
+
+
+```{r, eval=FALSE}
+corpus <- VCorpus(DataframeSource(df_texts))
+```
+
+
+## The English Europarl corpus {.smaller .build}
+
+We load a sample of the [European Parliament Proceedings Parallel Corpus](http://www.statmt.org/europarl/) with English texts. If you want to follow along, download ["08textmining-resource.zip" from the tutorial website](https://wzbsocialsciencecenter.github.io/wzb_r_tutorial/#8---text-mining-i).
+
+
+```{r, message=FALSE, warning=FALSE}
+library(tm)
+
+europarl <- VCorpus(DirSource('08textmining-resources/nltk_europarl'))
+europarl
+```
+
+## Inspecting a corpus {.smaller .build}
+
+`inspect` returns information on corpora and documents:
+
+```{r}
+inspect(europarl)
+```
+
+## Inspecting a corpus {.smaller .build}
+
+Information for the fourth document:
+
+```{r}
+inspect(europarl[[4]])
+```
+
+```{r, echo=FALSE}
+library(stringr)
+
+corpus2df <- function(corp) {
+  txt <- c()
+  for (i in 1:length(corp)) {
+    doc <- corp[[i]]
+    new_txt <- str_trim(content(doc))
+    new_txt <- new_txt[new_txt != '']
+    txt <- c(txt, new_txt[1])
+  }
+  
+  data.frame(name = 1:length(corp), text = paste0(substr(str_trim(txt), 0, 50), '...'), stringsAsFactors = FALSE)
+}
+```
+
+## Inspecting a corpus {.smaller .build}
+
+Get the raw text of a document with `content()`:
+
+```{r}
+head(content(europarl[[1]]))
+```
+
+
+## Text processing {.build}
+
+We want to investigate word frequencies in our corpus. To count words, we need to transform raw text into a *normalized* sequence of *tokens*.
+
+Why normalize text? Consider these documents:
+
+1. "We can't explain what we don't know."
+2. "We cannot do that. We do not want that."
+
+- instances of *"We"* and *"we"* shouldn't be counted separately &rarr; transform to lower case
+- instances of contracted and expanded words (*"can't"* and *"cannot"*) shouldn't be counted separately &rarr; expand all contractions
+
+
+## Text processing {.build}
+
+Text processing includes many steps and hence many decisions that have **big effect** on your results. Several possibilities will be shown here. If and how to apply them depends heavily on your data and your later analysis.
+
+Can you think of an example, where unconditional lower case transformation is bad?
+
+<!-- TODO
+- person (sur-)names ("Stone", "Smith", etc.)
+- company names, institutions, etc. ("Apple", "Sun", ...)
+
+&rarr; named entity recognition
+-->
+
+
+## Text normalization {.build}
+
+Normalization might involve some of the following steps:
+
+- replace contractions (*"shouldn't"* &rarr; *"should not"*)
+- remove punctuation and special characters
+- case conversion (usually to lower case)
+- remove stopwords (extremely common words like<br>*"the, a, to, ..."*)
+- correct spelling
+- stemming / lemmatization
+
+**The order is important!**
+
+
+## Text normalization with `tm` {.build}
+
+Text normalization can be employed with "transformations" in `tm`.
+
+Concept:
+
+```
+tm_map(<CORPUS>, content_transformer(<FUNCTION>), <OPTIONAL ARGS>)
+```
+
+- `<FUNCTION>` can be any function that takes a character vector, transforms it, and returns the result as character vector
+- `<OPTIONAL ARGS>` are fixed arguments passed to `<FUNCTION>`
+- `tm` comes with many predefined transformation functions like `removeWords`, `removePunctuation`, `stemDocuments`, ...
+
+
+## Text normalization with `tm` {.build .smaller}
+
+A transformation pipeline applied to our corpus (only showing the first three documents):
+
+Original documents:
+
+```{r, echo=FALSE}
+head(corpus2df(europarl), 3)
+```
+
+```{r}
+europarl <- tm_map(europarl, content_transformer(textclean::replace_contraction)) %>%
+  tm_map(content_transformer(tolower)) %>%
+  tm_map(removeNumbers) %>%
+  tm_map(removeWords, stopwords('en')) %>%
+  tm_map(removePunctuation) %>%
+  tm_map(stripWhitespace)
+```
+
+After text normalization:
+
+```{r, echo=FALSE}
+head(corpus2df(europarl), 3)
+```
+
+
+## Creating a DTM {.build .smaller}
+
+- `DocumentTermMatrix()` takes a corpus, tokenizes it, generates document term matrix *(DTM)*
+- parameter `control`: adjust the transformation from corpus to DTM
+    - here: allow words that are at least 2 characters long
+    - by default, words with less than 3 characters would be removed
+
+```{r}
+dtm <- DocumentTermMatrix(europarl,
+                          control = list(wordLengths = c(2, Inf)))
+inspect(dtm)
+```
+
+## Creating a DTM {.build .smaller}
+
+- a `tm` DTM is a **sparse matrix** &rarr; only values $\ne 0$ are stored &rarr; saves a lot of memory
+- many values in a DTM are 0 for natural language texts &rarr; can you explain why?
+- some functions in R can't work with sparse matrices &rarr; convert to an ordinary matrix then:
+
+```{r}
+as.matrix(dtm)[,1:8]   # cast to an ordinary matrix and see first 8 terms
+```
+
+
+## Creating a $\text{tfidf}$-weighted DTM {.build .smaller}
+
+You can create a $\text{tfidf}$-weighted matrix by passing `weightTfIdf` as a weighting function:
+
+```{r}
+tfidf_dtm <- DocumentTermMatrix(europarl,
+                                control = list(weighting = weightTfIdf))
+inspect(tfidf_dtm)
+```
+
+## Working with a DTM {.build .smaller}
+
+`Terms()` returns the vocabulary of a DTM as a character string vector. We can see how many unique words we have:
+
+```{r}
+length(Terms(dtm))
+```
+
+```{r}
+range(dtm)
+```
+
+`findFreqTerms()` returns the terms that occur above a certain threshold (here at least 500 occurrences):
+
+```{r}
+findFreqTerms(dtm, 500)
+```
+
+## Working with a DTM {.build .smaller}
+
+`findMostFreqTerms()` returns the $N$ most frequent terms per document:
+
+```{r}
+findMostFreqTerms(dtm, 5)
+```
+
+## Working with a DTM {.build .smaller}
+
+With a tf-idf weighted DTM, we get a better sense of which terms are central to each document:
+
+```{r}
+findMostFreqTerms(tfidf_dtm, 5)
+```
+
+# Document similarity
+
+## Document similarity and distance {.build}
+
+Feature vectors such as word counts per document in a DTM can be used to measure **similarity between documents**.
+
+Imagine we had a very simple corpus with only three documents and two words in the vocabulary:
+
+```{r, echo=FALSE}
+docs <- matrix(c(2, 1, 3, 2, 0, 1), nrow = 3, ncol = 2, byrow = TRUE)
+rownames(docs) <- c('doc1', 'doc2', 'doc3')
+colnames(docs) <- c('hello', 'world')
+docs
+```
+<br>
+
+&rarr; each document is a two-dimensional feature vector, e.g.:<br> $\text{doc1} = \begin{pmatrix}2 \\ 1 \end{pmatrix}$.
+
+
+## Document similarity and distance {.build .smaller}
+
+Since we have two-dimensional feature vectors, we could visualize feature vectors in cartesian space:
+
+<div class="fullfig">
+  <img src="08textmining-figure/docs2d.png" alt="2D features in cartesian space" style="max-width:70%"><br>
+</div>
+
+How can we measure how close or far apart these vectors are?
+
+## Document similarity and distance {.build}
+
+If normalized to a range of $[0, 1]$, similarity and distance are **complements**. You can then convert between both:
+
+$\text{distance} = 1 - \text{similarity}$.
+
+A distance of 0 means two vectors are identical (they have maximum similarity of 1).
+
+
+## Distance measures {.build .smaller}
+
+We can use **similarity and distance measures** to measure a degree of closeness (or distance) between two feature vectors (i.e. documents).
+
+There are many different measures, but a proper *distance metric* must satisfy the following conditions for distance metric $d$ and feature vectors $x, y, z$ ([A. Huang 2008](http://www.academia.edu/download/32952068/pg049_Similarity_Measures_for_Text_Document_Clustering.pdf)):
+
+1. $d(x, y) \ge 0$: the distance can never be negative.
+2. $d(x, y) = 0$ if and only if $x = y$: (only) identical vectors have a distance of 0.
+3. $d(x, y) = d(y, x)$: distances are symmetric.
+4. $d(x, z) \le d(x, y) + d(y, z)$: satisfies triangle inequality.
+
+
+## Euclidian distance {.build .smaller}
+
+The *Euclidian distance* is the length of the straight line between two points in space.
+
+<div class="fullfig">
+  <img src="08textmining-figure/docs2d-euclid.png" alt="2D features in cartesian space" style="max-width:70%"><br>
+</div>
+
+In 2D, it's an application of the Pythagorean theorem $c = \sqrt{a^2 + b^2}$. For *doc2* and *doc3* this means: $\sqrt{(3-0)^2 + (2-1)^2}$.
+
+
+## Euclidian distance {.smaller}
+
+<div class="fullfig">
+  <img src="08textmining-figure/docs2d-euclid.png" alt="2D features in cartesian space" style="max-width:70%"><br>
+</div>
+
+General formular: $d(x, y) = \sqrt{\sum_{i=1}^{n}(x_i-y_i)^2}$ for vectors $x$, $y$ in $n$-dimensional space. This distance is also called the *L2-norm*.
+
+
+## Euclidian distance {.smaller}
+
+<div class="fullfig">
+  <img src="08textmining-figure/docs2d-euclid.png" alt="2D features in cartesian space" style="max-width:60%"><br>
+</div>
+
+The Euclidian distance satisfies all conditions for distance metrics.
+
+**Beware: The euclidian distance takes the length of the vectors into account (not only their direction!).** &rarr; in a DTM, the total count of words determines the distance.
+
+How can you make sure that only the proportion of words is taken into account?
+
+## Euclidian distance {.smaller .build}
+
+In R, the function `dist` provides several distance measures. The default is the Euclidian distance. The distances between each row are calculated and returned as `dist` type ("triangular matrix"):
+
+```{r}
+dist(docs)
+```
+
+Using a normalized DTM:
+
+```{r}
+docs_normed <- docs / rowSums(docs)   # word proportions
+dist(docs_normed)
+```
+
+You can use `as.matrix()` to convert to a distance to a proper matrix.
+
+
+## Cosine distance {.smaller .build}
+
+The cosine distance uses the angle between two vectors as distance metric:
+
+<div class="fullfig">
+  <img src="08textmining-figure/docs2d-cosdist.png" alt="2D features in cartesian space" style="max-width:75%"><br>
+</div>
+
+## Cosine distance {.smaller}
+
+<div class="fullfig">
+  <img src="08textmining-figure/docs2d-cosdist.png" alt="2D features in cartesian space" style="max-width:60%"><br>
+</div>
+
+The angle $\cos(\theta)$ between vectors $x$, $y$ can be calculated with:
+
+$$
+\cos(\theta) = \frac{x \cdot y}{\|x\| \|y\|}
+$$
+&rarr; calculate dot product of $x$ and $y$ and divide by product of their magnitudes (their "length").
+
+
+## Cosine distance {.smaller .build}
+
+```{r, echo=FALSE}
+rad2deg <- function(rad) {(rad * 180) / (pi)}
+deg2rad <- function(deg) {(deg * pi) / (180)}
+```
+
+Example in R for angle between *doc1* and *doc2*:
+
+```{r}
+doc1 <- docs['doc1',]
+doc2 <- docs['doc2',]
+cos_theta <- (doc1 %*% doc2) / (sqrt(sum(doc1^2)) * sqrt(sum(doc2^2)))
+rad2deg(acos(cos_theta))   # cos^-1 (arc-cosine) converted to degrees
+```
+
+A function to calculate the cosine distance between $n$-dimensional feature vectors in a matrix `x`:
+
+```{r}
+cosineDist <- function(x) {
+  cos_theta <- x %*% t(x) / (sqrt(rowSums(x^2) %*% t(rowSums(x^2))))
+  as.dist(2 * acos(cos_theta) / pi)   # normalize to range [0, 1]
+}
+```
+
+
+```{r}
+cosineDist(docs)
+```
+
+## Cosine distance {.build .smaller}
+
+**The cosine distance only takes the direction of the vectors into account, not their length.** This means it is invariant to scaling the vectors.
+
+$$
+x = \begin{pmatrix}2 \\ 1 \end{pmatrix},\\
+y = \begin{pmatrix}4 \\ 2 \end{pmatrix}
+$$
+
+What is the angle between these vectors?
+
+It is 0 because $y = 2x$. Both vectors point in the same direction, hence their angle is the same. Only their magnitude is different.
+
+**In practical terms this means the cosine distance only takes word proportions into account.**
+
+The cosine distance does not adhere to the second condition of distance metrics (*only* identical vectors have a distance of 0).
+
+## Closing words on document similarity {.build}
+
+For illustrative purposes, we've used vectors in 2D space, i.e. with only two words ("hello" and "world"). Most text corpora contain thousands of words. **Distances can be calculated in the same way in this $n$-dimensional space.**
+
+There are much more distance metrics, but Euclidian and cosine distance are among the most popular.
+
+Once you have a distance matrix, you can use it for **clustering documents**.
+
+Remember that **we only compare word usage in documents**, not meaning, intent or sentiment. Two documents may have similar word usage but different meaning:
+
+*doc1 = "not all cats are beautiful"*<br>
+*doc2 = "all cats are not beautiful"*
+
+
+
+## Literature
+
+* [Feinerer et al 2008: Text Mining Infrastructure in R](https://www.jstatsoft.org/article/view/v025i05)
+* Julia Silge, David Robinson 2018: Text mining with R -- [available online for free](https://www.tidytextmining.com/) 
+* Kwartler 2017: Text Mining in Practice with R
+* Ken Benoit, Paul Nulty (in progress): Quantitative Text Analysis Using R (with [quanteda package](https://quanteda.io/))
+
+
+
+## Tasks {.smaller}
+
+See dedicated tasks sheet on the [tutorial website](https://wzbsocialsciencecenter.github.io/wzb_r_tutorial/).

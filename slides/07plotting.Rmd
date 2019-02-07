@@ -1,0 +1,635 @@
+---
+title: "R Tutorial at the WZB"
+subtitle: "7 - Reshaping data and plotting with ggplot2"
+author: "Markus Konrad"
+date: "December 06, 2018"
+output:
+  ioslides_presentation:
+    logo: _all/wzbfirmierungquerschwarzmitschrift.png
+    css: _all/custom.css
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(R.options = list(max.print = 60))
+set.seed(123)
+library(carData)
+library(pscl)
+library(tidyverse)
+```
+
+
+## Today's schedule
+
+1. Review of last week's tasks
+2. Reshaping data with `gather()` and `spread()`
+3. Plotting with *ggplot2*
+
+# Review of last week's tasks
+
+## Solution for tasks #6
+
+now online on https://wzbsocialsciencecenter.github.io/wzb_r_tutorial/
+
+# Reshaping data with `gather()` and `spread()`
+
+## Tidy data {.build .smaller}
+
+Hadley Wickham introduced the concept of **tidy data** as a way how data should be organized so it is comfortable to work with ([H. Wickham 2014: Tidy Data](http://www.jstatsoft.org/v59/i10/paper)). He defined three rules that make a data set tidy:
+
+1. Each variable must have its own column.
+2. Each observation must have its own row.
+3. Each value must have its own cell.
+
+<div class="fullfig">
+  <img src="07plotting-figure/tidy-1.png" alt="rules of a tidy data set">
+  <small>source: [Grolemund, Wickham 2017: R for Data Science](http://r4ds.had.co.nz/tidy-data.html#introduction-6)</small>
+</div>
+
+## Why tidy data? {.build}
+
+- a tidy data set allows for easier variable selection, grouping, summarization and visualization
+- tools and packages in the *tidyverse* like *dplyr* or *ggplot2* require data to be organized in that way
+
+- the problem: most data you'll get won't be "tidy" from the beginning on &rarr; you'll need to reshape it
+
+
+## Reshaping untidy data {.build .smaller}
+
+**`OBrienKaiser` from package *carData***
+
+- data from imaginary study
+- three treatments: A, B, control
+- three measurement types: pretest, posttest, follow-up session
+- each measured at five occasions (suffixes `.1` to `.5`)
+
+```
+ treatment gender pre.1 pre.2 pre.3 pre.4 pre.5 post.1 post.2 post.3 post.4 post.5 fup.1 ...
+         A      M     7     8     7     9     9      9      9     10      8      9     9 ...
+         B      F     4     5     7     5     4      7      7      8      6      7     7 ...
+   control      M     1     2     4     2     1      3      2      5      3      2     2 ...
+       ...
+```
+
+Is this data *tidy*?
+
+**No!** You have **several measurements (observations) per row**. This is also called a *wide table format*.
+
+&rarr; hard to work with (e.g. compute mean of all three measurement types separately)
+
+## Reshaping untidy data {.build .smaller}
+
+We can use `gather()` from package *tidyr* to put the measurements in separate rows.
+
+<div class="fullfig">
+  <img src="07plotting-figure/tidy-9.png" alt="gathering schema" style="max-height:33%"><br>
+  <small>source: [Grolemund, Wickham 2017: R for Data Science](http://r4ds.had.co.nz/tidy-data.html#gathering)</small>
+</div>
+
+## Reshaping untidy data {.smaller .build}
+
+`gather()` takes the following arguments (among others):
+
+1. The data to work with (omit this if you use the pipe operator `%>%`).
+2. The "untidy" columns to gather.
+3. `key`: The name of the new column containing the measurement types.
+4. `value`: The name of the new column containing the measurement values.
+
+```{r}
+(tidy_obk <- gather(OBrienKaiser, pre.1:fup.5,
+                    key = 'meas_type_occasion', value = 'value'))
+```
+
+
+## Reshaping untidy data {.build .smaller}
+
+Our data is already better to work with, but `meas_type_occasion` still contains two values like "pre.1" (pretest 1) or "fup.4" (follow-up test 4). This violates rule #3: *"Each value must have its own cell."*).
+
+We can use `separate()` (package *tidyr*) to split columns that contain several values. It takes the following arguments  (among others):
+
+1. The data to work with (omit this if you use the pipe operator `%>%`).
+2. The column to split.
+3. `into`: The names of the new columns.
+4. `sep`: A rule for how to split the values. The default is to split on anything that is not a number or character (e.g. slash, period, hyphen, ...).
+
+
+```{r}
+tidy_obk <- separate(tidy_obk, meas_type_occasion,
+                      into = c('meas_type', 'meas_occasion'))
+```
+
+
+## Reshaping untidy data {.build .smaller}
+
+Some additional variable conversion and we're done:
+
+```{r}
+tidy_obk <- mutate(tidy_obk,
+                   meas_type = factor(meas_type, levels = c('pre', 'post', 'fup')),
+                   meas_occasion = as.integer(meas_occasion))
+```
+
+```{r, echo=FALSE}
+tidy_obk
+```
+
+&rarr; This is tidy data. It's also called the *long table format*.
+
+## Reshaping untidy data {.build .smaller}
+
+With *this* data we can actually work!
+
+```{r}
+tidy_obk %>%
+  group_by(treatment, meas_type) %>%
+  summarise(mean_measurement = mean(value))
+```
+
+**It's better spending some time on data cleanup than struggling with messy data sets!**
+
+## Combining rows {.build .smaller}
+
+`spread()` is the opposite of `gather()`: It combines observations from multiple rows into a single row with more columns. Hence it converts data from the long table format to the wide table format.
+
+<div class="fullfig">
+  <img src="07plotting-figure/tidy-8.png" alt="gathering schema" style="max-height:50%"><br>
+  <small>source: [Grolemund, Wickham 2017: R for Data Science](http://r4ds.had.co.nz/tidy-data.html#spreading)</small>
+</div>
+
+## Combining rows {.build .smaller}
+
+`economics_long` from package *ggplot2* contains data in long table format:
+
+```
+   date       variable    value
+   1967-07-01 pce         507. 
+   1967-08-01 pce         510. 
+   1967-09-01 pce         516. 
+   ...
+   1967-07-01 pop      198712  
+   1967-08-01 pop      198911  
+   1967-09-01 pop      199113  
+   ...
+   1967-07-01 psavert      12.5
+   1967-08-01 psavert      12.5
+   1967-09-01 psavert      11.7
+   ...  
+```
+
+For each date, there are five variable types (pce, pop, psavert, unemploy, uempmed) and their respective values.
+
+## Combining rows {.build .smaller}
+
+`spread()` takes the following arguments:
+
+1. The data to work with (omit this if you use the pipe operator `%>%`).
+2. `key`: The column containing the variable names.
+2. `value`: The column containing the respective variable values.
+
+```{r, include=FALSE}
+economics_long <- economics_long %>% select(-value01) %>% ungroup()  # clean up
+```
+
+```{r}
+spread(economics_long, variable, value)
+```
+
+
+# Plotting with ggplot2
+
+## Data visualization
+
+Grouping, aggregating and summarizing results are important for data analysis. They let you reduce complex data sets to simpler summarizations, compare groups and help to see patterns in your data.
+
+Visualization of your data can have the same benefits and has the power to communicate a message much faster than a table of numbers. However, it requires a **sense for which type of graph or visual representation is appropriate for your data**.
+
+A useful website for inspiration, code examples and caveats is https://www.data-to-viz.com.
+
+## What is *ggplot2*?
+
+<div class="floatright" style="width:20%">
+  <img src="07plotting-figure/hex-ggplot2.png" alt="ggplot2 logo" height="180px">
+  <small>source: [tidyverse.org](https://www.tidyverse.org/)</small>
+</div>
+
+- R offers several plotting systems (e.g. base R, *lattice* or *ggplot2*)
+- we'll use *ggplot2* because:
+    - it's versatile and elegant
+    - it employs a well founded theory for declaratively creating graphics called *"Grammar of Graphics"* (Wilkinson 2005)
+    - it's part of the *tidyverse* &rarr; plays together well with the tools we already learned
+
+## General concepts behind *ggplot2* {.build .smaller}
+
+There are three basic steps for constructing plots with *ggplot2*:
+
+1. Supply a data set you want to plot to `ggplot()`.
+2. Define an **aesthetic mapping** with `aes()`.<br>
+    This describes how variables of your data are mapped to visual properties, e.g. variable "age" is plotted on the x-axis and "income" on the y-axis.
+3. Add layers of **geoms** (geometrical objects) that describe which graphical primitives to use (e.g. points in a scatter plot or bars in a bar plot).
+
+Additionally, you can further change the appearance of your plot by: 
+
+- altering the **scales** (e.g. use a logarithmic scale, modify display of factors, etc.)
+- defining **facets** &rarr; create *small multiples*, each showing a different subset of the data
+- changing the **coordinate system** (e.g. to display maps or radial plots)
+- changing the overall appearance of the plot by adjusting its **theme** (e.g. change background color, rotate axis labels, etc.)
+
+You combine all these steps with a `+`.
+
+## General concepts behind *ggplot2*
+
+We'll make a plot for historical election results from four states (data set `presidentialElections` from package *pscl*):
+
+```{r, echo=FALSE}
+sampled_states <- presidentialElections %>%
+  distinct(state, south) %>%
+  group_by(south) %>%    # group by south / not south
+  sample_n(2) %>%        # take 2 from each group
+  ungroup() %>%
+  select(state) %>%
+  unlist(use.names = FALSE)  # convert to simple vector
+```
+
+```{r, echo=FALSE}
+sampled_pres <- filter(presidentialElections, state %in% sampled_states)
+sampled_pres
+```
+
+
+## General concepts behind *ggplot2*
+
+<img src="07plotting-figure/ggplot2_components1.png" alt="ggplot2 components - 1" class="standalone">
+
+## General concepts behind *ggplot2*
+
+<img src="07plotting-figure/ggplot2_components2.png" alt="ggplot2 components - 2" class="standalone">
+
+## General concepts behind *ggplot2*
+
+<img src="07plotting-figure/ggplot2_components3.png" alt="ggplot2 components - 3" class="standalone">
+
+## General concepts behind *ggplot2*
+
+<img src="07plotting-figure/ggplot2_components4.png" alt="ggplot2 components - 4" class="standalone">
+
+## General concepts behind *ggplot2*
+
+<img src="07plotting-figure/ggplot2_components5.png" alt="ggplot2 components - 5" class="standalone">
+
+## General concepts behind *ggplot2*
+
+<img src="07plotting-figure/ggplot2_components6.png" alt="ggplot2 components - 6" class="standalone">
+
+## General concepts behind *ggplot2*
+
+<img src="07plotting-figure/ggplot2_components7.png" alt="ggplot2 components - 7" class="standalone">
+
+## Example data {.smaller .build}
+
+Example data: `politicalInformation` from *pscl* package
+
+> Interviewers administering the 2000 American National Election Studies assigned an ordinal rating to each respondent's "general level of information" about politics and public affairs.
+
+```{r, echo=FALSE, message=FALSE}
+politicalInformation
+```
+
+## Distribution of a single variable {.smaller .build}
+
+At first, you should make sure that you either loaded the *tidyverse* package or *ggplot2* package. We define:
+
+1. The data set `politicalInformation`.
+2. The aeshetic mapping for a single variable `age`.
+3. The graphical representation as histogram with `geom_histogram()`.
+
+```{r, fig.height=3, message=FALSE, warning=FALSE}
+ggplot(politicalInformation, aes(age)) + geom_histogram()
+```
+
+## Distribution of a single variable {.smaller .build}
+
+I hid two messsages produced by ggplot:
+
+```
+`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+Removed 9 rows containing non-finite values (stat_bin).
+```
+
+- the first tells us that a default value for the number of bins was used &rarr; we set `binwidth = 5` below to make a histogram of age with five-year steps
+- the second complains about 9 NA values in the `age` variable &rarr; we can ignore this
+
+```{r, fig.height=3, warning=FALSE}
+ggplot(politicalInformation, aes(age)) + geom_histogram(binwidth = 5)
+```
+
+
+## Distribution of a single variable {.smaller .build}
+
+What if we wanted to know if the distribution of `age` in our sample is different for men and women?
+
+We can produce *boxplots* for both subsets, putting `female` on the x-axis (see how the aesthetics mapping was changed!):
+
+```{r, fig.height=3, warning=FALSE}
+ggplot(politicalInformation, aes(x = female, y = age)) + geom_boxplot()
+```
+
+## Distribution of a single variable {.smaller .build}
+
+A *violin plot* offers better insight about the actual shape of the distribution:
+
+```{r, fig.height=3, warning=FALSE}
+ggplot(politicalInformation, aes(x = female, y = age)) +
+  geom_violin(draw_quantiles = c(0.25, 0.5, 0.75))  # horizontal lines for quartiles
+```
+
+## Distribution of a single variable {.smaller .build}
+
+A *density plot* also reveals that there are more younger men in the sample:
+
+```{r, fig.height=3, warning=FALSE}
+ggplot(politicalInformation, aes(age, color = female)) + geom_density()
+```
+
+## Counts of a single categorical variable {.smaller .build}
+
+Histograms can be used to bin continuous variables. To show the distribution of a categorical variable we can use a simple *bar chart*:
+
+```{r}
+ggplot(politicalInformation, aes(y)) + geom_bar()
+```
+
+## Counts of a single categorical variable {.smaller .build}
+
+A *stacked* and *grouped* bar charts allows to compare groups. Here, we compare groups based on the `collegeDegree` variable by mapping the "fill (color)" aesthetic to it.
+
+By default, the bars get stacked:
+
+```{r, fig.height=3}
+ggplot(politicalInformation, aes(y, fill = collegeDegree)) +
+  geom_bar()
+```
+
+## Counts of a single categorical variable {.smaller}
+
+A *stacked* and *grouped* bar charts allows to compare groups. Here, we compare groups based on the `collegeDegree` variable by mapping the "fill (color)" aesthetic to it.
+
+Setting the bars' `position` to `position_dodge()` creates a grouped bar chart:
+
+```{r, fig.height=3}
+ggplot(politicalInformation, aes(y, fill = collegeDegree)) +
+  geom_bar(position = position_dodge())
+```
+
+## Scatterplots {.smaller .build}
+
+A *scatterplot* displays the relationship between two numeric variables. We'll use the `airquality` and have a look at the relationship between ozone and temperature.
+
+```{r}
+head(airquality)
+```
+
+## Scatterplots {.smaller}
+
+A *scatterplot* displays the relationship between **two numeric variables**. We'll use the `airquality` and have a look at the relationship between ozone and temperature.
+
+We map `Ozone` to the y-axis and `Temp` to the x-axis and use `geom_point()`:
+
+```{r, warning=FALSE, fig.height=4}
+ggplot(airquality, aes(x = Temp, y = Ozone)) + geom_point()
+```
+
+## Scatterplots {.smaller .build}
+
+*Overplotting* can easily occur, especially with large data sets.
+
+- happens when multiple data points are drawn on the same spot
+- fix it with setting a semi-transparent fill color or apply *jittering*
+
+```{r, warning=FALSE, fig.height=4}
+ggplot(airquality, aes(x = Temp, y = Ozone)) +
+  geom_point(alpha = 0.33)  # alpha of 0 is invisible, 1 is opaque
+```
+
+## Scatterplots {.smaller}
+
+*Overplotting* can easily occur, especially with large data sets.
+
+- happens when multiple data points are drawn on the same spot
+- fix it with setting a semi-transparent fill color or apply *jittering*
+
+```{r, warning=FALSE, fig.height=4}
+ggplot(airquality, aes(x = Temp, y = Ozone)) +
+  geom_point(position = position_jitter())
+```
+
+## Scatterplots {.smaller .build}
+
+`geom_smooth()` aids the eye in seeing patterns by adding a (local polynomial) regression line and its confidence interval:
+
+```{r, message=FALSE, warning=FALSE, fig.height=4}
+ggplot(airquality, aes(x = Temp, y = Ozone)) +
+  geom_point(alpha = 0.33) +
+  geom_smooth()
+```
+
+## Line graphs {.smaller .build}
+
+A *line graph* can be used whenever you have an **ordered numeric variable on the x-axis**, such as years.
+
+We'll use a subset of the `presidentialElections` data set from the package *pscl*:
+
+```{r}
+(cal_pres <- presidentialElections %>% filter(state == 'California'))
+```
+
+## Line graphs {.smaller .build}
+
+We map `year` on the x-axis, the vote share for Democrats `demVote` on the y-axis and add a `geom_line()` layer:
+
+```{r, fig.height=3}
+ggplot(cal_pres, aes(x = year, y = demVote)) + geom_line()
+```
+
+## Line graphs {.smaller}
+
+We can additionally add points like in a scatterplot:
+
+```{r, fig.height=3}
+ggplot(cal_pres, aes(x = year, y = demVote)) +
+  geom_line() +
+  geom_point()
+```
+
+## Line graphs {.smaller .build}
+
+Again, we'll plot the historical election results from four states (data set `presidentialElections` from package *pscl*) stored in an object `sampled_pres`:
+
+```{r, echo=FALSE}
+sampled_pres
+```
+
+## Line graphs {.smaller .build}
+
+If we simply use the same command as before, we produce some interesting chaos:
+
+```{r, fig.height=3}
+ggplot(sampled_pres, aes(x = year, y = demVote)) + geom_line()
+```
+
+## Line graphs {.smaller .build}
+
+We have to add another aesthetic mapping (`color = state`) in order to tell apart the states' lines:
+
+```{r, fig.height=3}
+ggplot(sampled_pres, aes(x = year, y = demVote, color = state)) + geom_line()
+```
+
+
+## Saving plots {.build}
+
+A ggplot object can be assigned a name just as any other object in R:
+
+```{r, message=FALSE, warning=FALSE, fig.height=4}
+myplot <- ggplot(airquality, aes(x = Temp, y = Ozone))
+myplot   # shows an "empty" plot
+```
+
+
+## Saving plots {.smaller}
+
+You can re-use the ggplot object and try out different layers:
+
+```{r, message=FALSE, warning=FALSE, fig.height=4}
+myplot + geom_point()
+```
+
+## Saving plots {.smaller}
+
+You can re-use the ggplot object and try out different layers or themes:
+
+```{r, message=FALSE, warning=FALSE, fig.height=4}
+myplot + geom_point(position = position_jitter()) + theme_minimal()
+```
+
+## Saving plots {.smaller .build}
+
+You can eventually save the plot to disk with `ggsave()`:
+
+```{r, message=FALSE, warning=FALSE, fig.height=4}
+final_plot <- myplot + geom_point(position = position_jitter())
+ggsave('07plotting-resources/example_saved_figure.png',
+       plot = final_plot,
+       width = 4,
+       height = 3)
+```
+
+<br>
+
+There are several options to configure the output file (see `?ggsave`):
+
+- plot dimensions (by default in inch)
+- plot resolution
+- format (PNG, PDF, etc.) -- determined by file extension
+
+
+## Common mistakes {.smaller .build}
+
+A very common mistake is to accidentally put `+` on a new line:
+
+```{r, eval=FALSE}
+ggplot(airquality, aes(x = Temp, y = Ozone))
+  + geom_point()
+```
+
+`Error: Cannot use "+.gg()" with a single argument. Did you accidentally put + on a new line?`
+
+The `+` operator must appear before the line break (the same is true for other operators like `%>%` used in *dplyr*):
+
+```{r, eval=FALSE}
+ggplot(airquality, aes(x = Temp, y = Ozone)) +
+  geom_point()
+```
+
+
+## Common mistakes {.smaller .build}
+
+The type of your variables determines its scale for plotting. E.g. here you might want to use a discrete scale:
+
+```{r, message=FALSE, warning=FALSE, fig.height=4}
+ggplot(airquality, aes(x = Temp, y = Ozone, color = Month)) +
+  geom_point()
+```
+
+
+## Common mistakes {.smaller}
+
+Converting the numerical to a factor tells ggplot that a discrete scale is appropriate:
+
+```{r, message=FALSE, warning=FALSE, fig.height=4}
+ggplot(airquality, aes(x = Temp, y = Ozone, color = as.factor(Month))) +
+  geom_point()
+```
+
+
+## What we didn't cover {.build}
+
+This was only a short intro about *a few* types of plots that can be made with ggplot2. For more advanced plots you should learn about:
+
+- other **geoms** that allow to create other types of plots
+- **facets** to create "small multiples"
+- **scales** to adjust colors, legends, scale intervals, etc.
+- **themes** to adjust the overall appearance of a plot
+
+## ggplot extensions {.build}
+
+There are several packages that extend ggplot's capabilities:
+
+- [ggmap](https://cran.r-project.org/web/packages/ggmap/index.html): Spatial visualization (plot geographic data on maps)
+- [ggraph](https://cran.r-project.org/web/packages/ggraph/index.html): Graphs and networks
+- [ggdag](https://cran.r-project.org/web/packages/ggdag/index.html): Analyze and create Directed Acyclic Graphs (DAGs)
+- [ggmosaic](https://cran.r-project.org/web/packages/ggmosaic/index.html): Mosaic plots
+- [ggwordcloud](https://cran.r-project.org/web/packages/ggwordcloud/index.html): Word clouds
+- [gghighlight](https://cran.r-project.org/web/packages/gghighlight/index.html): Highlight lines and points
+- [cowplot](https://cran.r-project.org/web/packages/cowplot/index.html): Combine multiple labelled plots
+- [plotly](https://cran.r-project.org/web/packages/plotly/index.html): Create interactive web graphics
+
+
+## Documentation and other resources {.smaller .build}
+
+The documentation is excellent. If you don't know how a "geom" can be controlled, have a look at it's documentation, e.g.
+
+```
+[...]
+Aesthetics:
+     ‘geom_point’ understands the following aesthetics (required
+     aesthetics are in bold):
+        • *‘x’*
+        • *‘y’*
+        • ‘alpha’
+        • ‘colour’
+        • ‘fill’
+        • ‘group’
+        • ‘shape’
+        • ‘size’
+        • ‘stroke’
+[...]
+```
+
+&rarr; you *must* specify the aesthetics `x` and `y`<br>
+&rarr; you *can* make several other properties (e.g. transparency or fill color) dependent on some variable
+
+## Documentation and other resources
+
+For more, see:
+
+<div style="float:right;max-width:33%">
+  <img src="07plotting-figure/r_graphics_cookbook.jpg" alt="R Graphics Cookbook">
+</div>
+
+- ggplot2 website incl. reference: https://ggplot2.tidyverse.org/
+- W. Chang, *R Graphics Cookbook*
+- The R Graph Gallery: https://www.r-graph-gallery.com/
+
+
+## Tasks {.smaller}
+
+See dedicated tasks sheet on the [tutorial website](https://wzbsocialsciencecenter.github.io/wzb_r_tutorial/).

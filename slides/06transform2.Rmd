@@ -1,0 +1,250 @@
+---
+title: "R Tutorial at the WZB"
+subtitle: "6 - Recap / Transforming data with R II"
+author: "Markus Konrad"
+date: "November 29, 2018"
+output:
+  ioslides_presentation:
+    logo: _all/wzbfirmierungquerschwarzmitschrift.png
+    css: _all/custom.css
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(R.options = list(max.print = 60))
+library(tidyverse)
+```
+
+
+## Today's schedule
+
+1. Review of last weeks' tasks and recap
+2. Data aggregation and summarization
+
+# Review of last weeks' tasks and recap
+
+## Solutions and review of previous tasks
+
+<br>
+<br>
+
+Solutions for all previous tasks are online at https://wzbsocialsciencecenter.github.io/wzb_r_tutorial/
+
+<br>
+<br>
+
+**Any problems, questions?**
+
+## Recap
+
+I prepared a small quiz for you...
+
+# Transforming data with R II
+
+## What we've learned so far  {.smaller .build}
+
+We already got to know several *dplyr "verbs"* for transforming data:
+
+- `filter()` for filtering (subsetting) rows (observations) according to some criteria
+- `distinct()` for selecting only *unique* rows
+- `arrange()` for ordering rows
+- `select()` for selecting only certain columns (variables)
+- `rename()` for giving new names to columns
+- `mutate()` and `transmute()` for adding new columns
+
+Today: Combining several verbs in one step and learning new verbs for **grouping and summarizing data**.
+
+## Combining several dplyr verbs  {.smaller .build}
+
+Applying several steps is cumbersome this way:
+
+```{r}
+air_june <- filter(airquality, Month == 6)
+air_june <- select(air_june, -Month)   # we don't need Month any more
+head(air_june)
+```
+
+<br>
+You can always nest functions:
+
+```{r}
+air_june <- select(filter(airquality, Month == 6), -Month)
+```
+<br>
+
+&rarr; makes code harder to read (you have to read "inside-out")
+
+## Combining several dplyr verbs  {.smaller .build}
+
+A common approach to chain several data transformation steps is to use the **pipe operator:**
+
+`step_one() %>% step_two() %>% ... %>% last_step()`
+
+&rarr; the output of one function is passed as input to the next function
+
+```{r}
+air_june <- filter(airquality, Month == 6) %>% select(-Month)
+```
+
+<br>
+**Notice how `select()` has only one parameter, since it implicitely operates on the output of `filter()`.**
+
+For long complex data transformations, each step is usually written on a separate line:
+
+```{r}
+air_june <- airquality %>%
+  filter(Month == 6) %>%
+  select(-Month) %>%
+  arrange(desc(Wind))
+```
+
+## Aggregates with `group_by()` and `summarise()`  {.smaller .build}
+
+`summarise()` can be used to create summary statistics on aggregate data:
+
+```{r}
+summarise(airquality, mean_ozone = mean(Ozone, na.rm = TRUE))
+```
+
+<br>
+&rarr; summary of the whole data frame
+
+## Aggregates with `group_by()` and `summarise()`  {.smaller .build}
+
+It is more useful in combination with `group_by()`, which forms groups based on the variables you pass:
+
+```{r}
+group_by(airquality, Month) %>% summarise(mean_ozone = mean(Ozone, na.rm = TRUE))
+```
+
+&rarr; summary per group, i.e. per month
+
+## Aggregates with `group_by()` and `summarise()`  {.smaller .build}
+
+You can pass several aggregate values as arguments: 
+
+```{r}
+group_by(airquality, Month) %>%
+  summarise(mean_ozone = mean(Ozone, na.rm = TRUE),
+            sd_ozone = sd(Ozone, na.rm = TRUE),
+            n = n(),                        # number of obs. per group
+            n_nonNA = sum(!is.na(Ozone)))   # number of non-NA Ozone obs.
+```
+
+- any function passed to `summarize` will operate on each group's observations
+- `n()` counts the number of observations in each group
+
+## Some more complex examples with the `flights` data  {.smaller .build}
+
+We'll use a subset `fl_sub` for some more grouping and summarizing examples.
+
+```{r}
+library(nycflights13)
+
+fl_sub <- select(flights, origin, dest, distance, arr_delay)
+head(fl_sub)
+```
+
+- `origin` and `dest` are the origin and destination airports
+- `distance` is the flight distance in miles
+- `arr_delay` is the arrival delay in minutes
+
+## Relationship between the distance and average delay  {.smaller .build}
+
+We want to find out what's the **relationship between distance and average delay per destination airport**. We want to **exclude small destination airports (<= 20 connections) and outlier Honolulu**. Which data transformation steps are necessary?
+
+1. Group flights by destination with `group_by()`.
+2. For each group, compute average distance, average delay and number of flights with `summarise()`.
+3. Exclude observations according to mentioned criteria with `filter()`.
+
+## Relationship between the distance and average delay  {.smaller}
+
+We want to find out what's the **relationship between distance and average delay per destination airport**. We want to **exclude small destination airports (<= 20 connections) and outlier Honolulu**.
+
+```{r}
+delays <- fl_sub %>% 
+  group_by(dest) %>%      # step 1
+  summarise(count = n(),  # step 2
+            mean_dist = mean(distance, na.rm = TRUE),
+            mean_delay = mean(arr_delay, na.rm = TRUE)) %>% 
+  filter(count > 20, dest != "HNL")  # step 3
+head(delays)
+```
+
+## Relationship between the distance and average delay {.smaller}
+
+```{r, echo=FALSE, message=FALSE}
+ggplot(data = delays, mapping = aes(x = mean_dist, y = mean_delay)) +
+  geom_point(aes(size = count), alpha = 1/3) +
+  geom_smooth()
+```
+
+## Grouping by multiple variables {.smaller .build}
+
+We want to know what the **most popular flight connections** are, and also which connections have the **lowest or highest average delays**. We will **exclude rarely used connections with less than 100 flights**. Which data transformation steps are necessary?
+
+1. Group by `origin` *and* `dest` to form groups of connections.
+2. Summarise by counting the number of observations per connection and computing the mean delay.
+3. Exclude observations according to mentioned criteria with `filter()`.
+
+## Grouping by multiple variables {.smaller}
+
+We want to know what the **most popular flight connections** are, and also which connections have the **lowest or highest average delays**. We will **exclude rarely used connections with less than 100 flights**. Which data transformation steps are necessary?
+
+```{r}
+connections <- fl_sub %>% 
+  group_by(origin, dest) %>%   # step 1
+  summarise(n = n(),           # step 2
+            mean_delay = mean(arr_delay, na.rm = TRUE)) %>%
+  filter(n >= 100)             # step 3
+head(connections)
+```
+
+## Grouping by multiple variables {.smaller .build}
+
+Now we can obtain the top three connections by using `arrange()` and `head()`:
+
+```{r}
+connections %>% arrange(desc(n)) %>% head(3)
+```
+
+Or the top three connections with the least delay time:
+
+```{r}
+connections %>% arrange(mean_delay) %>% head(3)
+```
+
+## Grouping by multiple variables {.smaller .build}
+
+Or the top three connections with the most delay time:
+
+```{r}
+connections %>% arrange(desc(mean_delay)) %>% head(3)
+```
+
+## Ungrouping {.smaller .build}
+
+Once you group a data frame and assign it to an object, the grouping information is retained. You can see this in the additional information that is printed above the data (`Groups:   ...`):
+
+```{r}
+head(connections)
+```
+
+## Ungrouping {.smaller .build}
+
+As long as a data frame is grouped, `summarise()` operates on the groups and not on the whole data frame:
+
+```{r}
+connections %>% summarise(median_n_conn = median(n))
+```
+
+You can remove the grouping information via `ungroup()`. Now `summarise()` operates on the whole data frame:
+
+```{r}
+connections %>% ungroup() %>% summarise(median_n_conn = median(n))
+```
+
+# Tasks
+
+## Tasks {.smaller}
+
+See dedicated tasks sheet on the [tutorial website](https://wzbsocialsciencecenter.github.io/wzb_r_tutorial/).

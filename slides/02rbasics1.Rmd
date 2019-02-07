@@ -1,0 +1,824 @@
+---
+title: "R Tutorial at the WZB"
+subtitle: "2 - R Basics I"
+author: "Markus Konrad"
+date: "November 01, 2018"
+output:
+  ioslides_presentation:
+    logo: _all/wzbfirmierungquerschwarzmitschrift.png
+    css: _all/custom.css
+
+---
+
+## Today's schedule
+
+1. Review of last week's tasks
+2. Objects and assignments
+3. Fundamental data structures and operations: Vectors
+4. Fundamental data structures and operations: Data frames
+
+# Review of last week's tasks
+
+## Solution for tasks #1
+
+now online on https://wzbsocialsciencecenter.github.io/wzb_r_tutorial/
+
+# R Basics I
+
+## Objects and assignments {.smaller .build}
+
+- an *object* is basically anything that can be *named* and assigned a *value*
+
+```{r}
+x <- 2
+```
+<br>
+
+- creates an object named `x` and assigns the value `2`
+- `<-` is an *assignment operator* *
+- whole line is formally called a *statement*, it's evaluated once you press `ENTER`
+- shortcut for `<-` in RStudio: `ALT+-`
+
+A little shortcut used in the slides:
+
+```{r}
+(y <- x + 3)
+```
+
+&rarr; parentheses around assignment directly report the result underneath
+
+<small>* As in other programming languages, `=` can also be used for that. You can also reverse the assignment: `2 -> x`. However, both is frowned upon. Please don't do it. The convention in R is to use `<-`.</small>
+
+## Environment {.build}
+
+- objects are kept in memory during the R session
+- in RStudio, they are listed in the "Environment" tab in the top right pane
+
+<div class="fig">
+  <img src="02rbasics1-figure/rstudio-screenshot-environ.png" alt="RStudio environment" style="max-width:50%">
+</div>
+
+- use `rm(...)` to delete objects from memory:
+
+```{r}
+rm(x)
+```
+
+## "Objects" vs. "Variables"
+
+In Computer Science and programming, such objects are often called "variables", because they can change their value while a program or script is running.
+
+This is quite different from what variables mean in Social Sciences. Please don't confuse this.
+
+## Naming things
+
+You can name objects as you like. However, there are some rules:
+
+> Identifiers consist of a sequence of letters, digits, the period (‘.’) and the underscore. They must not start with a digit or an underscore, or with a period followed by a digit.
+>
+> --- R Language Definition
+
+So this is fine:
+
+```{r, eval=FALSE}
+another_one <- 1
+another_2 <- 2
+my.object.2... <- 123
+```
+
+## Naming things
+
+You can name objects as you like. However, there are some rules:
+
+> Identifiers consist of a sequence of letters, digits, the period (‘.’) and the underscore. They must not start with a digit or an underscore, or with a period followed by a digit.
+>
+> --- R Language Definition
+
+This is not:
+
+```{r, eval=FALSE}
+_fail <- 1
+## Error: unexpected input in "_"
+```
+
+```{r, eval=FALSE}
+2fail_again <- 'testing...'
+## Error: unexpected symbol in "2fail_again"
+```
+
+## Naming things
+
+Which of these are **not** valid object names?
+
+1. `coffee2go`
+2. `x__`
+3. `x__._`
+4. `_`
+5. `._`
+6. `.x`
+7. `.1`
+8. `.1coffee`
+9. `güzel`
+10. `2go`
+
+## Naming things
+
+Which of these are **not** valid object names?
+
+1. `coffee2go`
+2. `x__`
+3. `x__._`
+4. <strike style="color:red">`_`</strike>
+5. `._`
+6. `.x`
+7. <strike style="color:red">`.1`</strike>
+8. <strike style="color:red">`.1coffee`</strike>
+9. `güzel`
+10. <strike style="color:red">`2go`</strike>
+
+## Making comments
+
+Everything starting with a `#` will be ignored by R. This is used for making source code comments or temporarily disabling some code:
+
+```{r, eval=FALSE}
+# comment above
+c <- a + b   # comment beside
+
+# d <- c * b   # I disabled this statement
+```
+
+<br>
+When working with the console, that's not really useful. But we'll need it later when we'll write real R scripts.
+
+# Fundamental data structures and operations
+
+## Vectors {.smaller .build}
+
+R's most fundamental data structure: the *vector*. It stores **one-dimensional data** of a **single type**.
+
+A vector is created with `c(...)`.
+
+Four types of vectors that you'll need:
+
+1. Numeric vector: `c(3.2, 0, -8.6, 3e-2)` *
+2. Logical vector: `c(FALSE, TRUE, TRUE, FALSE, TRUE)`
+3. Character string vector: `c("she", "said", '"ok?"')`
+4. Vector of factors: `factor(c("B", "B", "A", "C", "B"))`
+
+Single-element vectors are called *scalars*:<br>
+`x <- 3` is the same as `x <- c(3)`
+
+<small>* Special type of numeric vector – the integer vector: `c(3L, 20L, -1L, 3L)`</small>
+
+## Arithmetical operations {.smaller .build}
+
+All arithmetical operations on vectors are performed **element-wise**:
+
+```{r}
+a <- c(1.2, 0, -0.6, 0.25)
+b <- c(2, 3, 10, 0)
+a + b
+```
+
+```{r}
+a - b
+```
+
+
+```{r}
+a * b
+```
+
+```{r}
+a / b
+```
+<small>(note how the division by zero produced an infinite number)</small>
+
+## Arithmetical operations {.smaller .build}
+
+You can create more complex expressions:
+
+```{r}
+a^2 + b^2
+```
+
+```{r}
+a + b / 2
+```
+
+```{r}
+(a + b) / 2
+```
+
+## Vector recycling {.smaller .build}
+
+What if the sizes of the vectors do not match?
+
+```{r}
+a
+```
+
+```{r}
+c <- c(2, 3, 10)
+a * c
+```
+
+A warning is issued, still both vectors are multiplied; the shorter vector `c` is "recycled":
+
+- $a_1 c_1 = 1.2 \cdot 2 = 2.4$
+- $a_2 c_2 = 0 \cdot 3 = 0$
+- $a_3 c_3 = -0.6 \cdot 10 = -6$
+- <span style="color:red">$\mathbf{a_4 c_1 = 0.25 \cdot 2 = 0.5}$</span>
+
+## Vector recycling {.smaller .build}
+
+**No warning is issued, if the larger vector is a multiple of the smaller vector:**
+
+```{r}
+a
+```
+
+```{r}
+d <- c(2, 3)
+a * d
+```
+
+&rarr; `d` is recycled to form `c(2, 3, 2, 3)`
+
+Multiplication by scalar is also a form of vector "recycling":
+
+```{r}
+e <- 100
+a * e
+```
+
+&rarr; `e` is recycled to form `c(100, 100, 100, 100)`
+
+## Side note: Working with RStudio  {.smaller}
+
+### The command history
+
+- all commands entered in the console are recorded to "command history"
+- whole history visible in "History" tab on top right
+
+<div class="fig">
+  <img src="02rbasics1-figure/rstudio-screenshot-environ.png" alt="RStudio environment" style="max-height:30%">
+</div>
+
+## Side note: Working with RStudio
+
+### Using the history in the console
+
+- **you can browse through the history in the Console using the `UP` and `DOWN` keys**
+- you can also use `CTRL+R` to interactively search through the history
+- this saves a lot of typing, e.g. when you want to correct a previous command
+
+## Side note: Working with RStudio  {.smaller}
+
+### Autocompletion
+
+- auto-completion of commands suggests objects after writing a few letters
+- **use the `TAB` key to activate auto-completion**
+- this saves a lot of typing when you have long object names
+
+```{r}
+my_long_object_name <- c(1, 2, 3)
+```
+
+<br>
+- now just type `my_` in the console and press `TAB`
+- what happens when you type `me` (**not** `my`) and then activate auto-completion?
+
+## Vector concatenation {.smaller .build}
+
+The function `c(...)` can also be used to *concatenate* vectors:
+
+```{r}
+a
+```
+
+```{r}
+b
+```
+
+```{r}
+c(a, b)
+```
+
+## Vector concatenation {.smaller .build}
+
+Vectors are always *flat*, i.e. one-dimensional. Hence, nesting the `c()` function will concatenate several vectors:
+
+```{r}
+c(1, 2, 3, c(4, 5))
+```
+
+You can append (or prepend) data to an already defined vector by appending and then re-assigning it to the same object name:
+
+```{r}
+a
+```
+
+```{r}
+a <- c(a, 1, 2, 3)
+```
+
+```{r}
+a
+```
+
+
+
+## Logical vectors {.smaller .build}
+
+Logical vectors or *boolean vectors* contain only binary logical values `TRUE` and `FALSE`\*. Logical operations like *AND*, *OR*, *XOR* can be applied.
+
+```{r}
+is_female <- c(FALSE, TRUE, TRUE, FALSE, TRUE)
+younger30 <- c(TRUE, TRUE, FALSE, FALSE, FALSE)
+```
+
+<br>
+Logical *AND*:
+
+```{r}
+is_female & younger30
+```
+
+Logical *OR*:
+
+```{r}
+is_female | younger30
+```
+
+Use case: Select observations according to several criteria, i.e. "participant is female *and* younger than 30".
+
+<small>* R defines the abbreviations `T` / `F` for `TRUE` / `FALSE`. Please don't use them. You may confuse them with a variable/object `T` or `F`.</small>
+
+## Character string vectors {.smaller .build}
+
+*Character strings* are used to store textual data.
+
+```{r}
+s <- c("hello", "string")
+s
+```
+
+You can use either double (`"`) or single (`'`) quotation marks to denote a string.
+
+```{r}
+t <- c("world", 'example')
+```
+
+<br>There are many functions that operate on strings, for example `paste`:
+
+```{r}
+paste(s, t)
+```
+
+Use cases:
+
+- storing names, addresses, comments, IDs, etc.
+- performing quantitative text analysis
+
+## Factors {.smaller .build}
+
+*Factors* are used to store categorical variables. They can be initialized with numeric or string vectors:
+
+```{r}
+group <- factor(c("B", "B", "A", "C", "B"))
+group
+```
+
+Internally, each value is mapped to an integer (a category "code").
+
+```{r}
+as.integer(group)
+```
+
+## Factor levels {.smaller .build}
+
+```{r}
+group
+```
+
+*Levels* denote the available categories for a variable. `levels(x)` returns the levels of a factor object `x`:
+
+```{r}
+levels(group)
+```
+
+Levels can be specified explicitely:
+
+```{r}
+factor(c('yes', 'no', 'yes', 'yes'), levels = c('yes', 'no', 'maybe'))
+```
+
+## Ordered factors {.smaller .build}
+
+Ordinal variables can be stored as *ordered factors* with `ordered(...)`
+
+```{r}
+consent <- ordered(c('low', 'low', 'very low', 'high'),
+                   levels = c('very low', 'low', 'neutral', 'high', 'very high'))
+consent
+```
+
+```{r}
+levels(consent)
+```
+
+You can also use numeric values as factors:
+
+```{r}
+score <- ordered(c(3, 1, 1, 5), levels = 1:5)
+score
+```
+
+## Type conversion {.smaller .build}
+
+*Conversion* is the **explicit** process of changing a (vector's) data type.
+
+Explicit type conversion can be done with a family of `as.<TYPE>(...)` functions, e.g. to convert a factor to an integer vector:
+
+```{r}
+consent
+```
+
+```{r}
+as.integer(consent)
+```
+
+Or a logical vector to an integer vector:
+
+```{r}
+younger30
+```
+
+
+```{r}
+as.integer(younger30)
+```
+
+
+## Type conversion {.smaller .build}
+
+You'll often have to convert strings (e.g read from a file) to numbers. The following is a character string vector:
+
+```{r}
+(values <- c('1.2', '-3', "0.001"))
+```
+
+Arithmetic operations fail, because we can't multiply a string with a number:
+
+```{r, eval=FALSE}
+values * 3
+## Error in values * 3 : non-numeric argument to binary operator
+```
+
+<br>
+We have to convert the string vector to a numeric vector first:
+
+```{r}
+as.numeric(values) * 3
+```
+
+## Type coercion {.smaller .build}
+
+*Coercion* is the **implicit** process of a (vector's) data type being changed.
+
+```{r}
+c(0.2, TRUE, 4)
+```
+
+> All elements of an atomic vector must be the same type, so when you attempt to combine different types they will be coerced to the most flexible type. Types from least to most flexible are: logical, integer, double, and character.
+>
+> --- Wickham 2014: Advanced R
+
+```{r}
+c(0.2, TRUE, 4, '3.1')
+```
+
+## Type coercion {.smaller .build}
+
+Coercion happens automatically, esp. when using mathematical functions, which can come in handy:
+
+```{r}
+younger30
+```
+
+```{r}
+sum(younger30)
+```
+
+&rarr; `sum()` here counts all occurrences of `TRUE` because `TRUE` becomes `1` and `FALSE` becomes `0` when coerced to a numeric type.
+
+## Missings {.smaller .build}
+
+`NA` is a special value reserved for denoting missing values. They can occur in all types of vectors:
+
+```{r}
+(age <- c(32, 68, NA, 55, 35, NA, 55, 56))
+```
+
+```{r}
+(smoker <- c(TRUE, NA, NA, TRUE, FALSE, FALSE, FALSE, TRUE))
+```
+
+`is.na(...)` indicates which elements are missing:
+
+```{r}
+is.na(age)
+```
+
+We can combine this with `sum(...)` to find out, how many elements are missing in a vector:
+
+```{r}
+sum(is.na(age))
+```
+
+## Missings {.smaller .build}
+
+All operations that involve a calculation with a `NA` value result in `NA`:
+
+```{r}
+a <- c(1, NA, 3)
+b <- c(NA, 8, 9)
+a + b
+```
+
+```{r}
+sum(a)
+```
+
+```{r}
+mean(b)
+```
+
+We'll later learn how to ignore `NA`s for some calculations.
+
+## Vector length {.build}
+
+A vector's size or length can be found out with `length`:
+
+```{r}
+smoker
+```
+
+```{r}
+length(smoker)
+```
+
+&rarr; counts the number of elements in a vector **including** `NA` values
+
+## Data frames {.smaller .build}
+
+*Data frames* are the most common data structure for storing **tabular data**. They consist of columns and rows. Think of the columns as *variables* and rows as *observations*.
+
+<div class="halffig">
+  <img src="02rbasics1-figure/r_data_structures.png" alt="R data structures">
+</div>
+
+Each column is a vector with a specific type. All columns (vectors) have the same length.
+
+## Creating data frames {.smaller .build}
+
+There are multiple ways to create a data frame:
+
+**1. By passing vectors**
+
+```{r}
+(cities <- data.frame(city = c('Berlin', 'Paris', 'Madrid'),
+                      pop = c(3711930, 2206488, 3141991),
+                      area = c(892, 105, 604)))
+```
+
+**2. By loading data from a file**
+
+Note that there are many formats to load data from (Excel, CSV, Stata, etc.)
+
+```{r}
+(cities <- read.csv('02rbasics1-data/cities.csv', stringsAsFactors = FALSE))
+```
+
+## Creating data frames {.smaller .build}
+
+**3. By conversion from another data type**
+
+```{r}
+consent   # this is a factor
+```
+
+```{r}
+as.data.frame(consent)
+```
+
+**4. By using a builtin dataset**
+
+```{r}
+data("airquality")
+head(airquality, 2)
+```
+
+
+## Data frame inspection {.smaller .build}
+
+```{r}
+cities
+```
+
+
+Finding out the number of columns:
+
+```{r}
+ncol(cities)
+```
+
+Finding out the number of rows:
+
+```{r}
+nrow(cities)
+```
+
+## Data frame inspection {.smaller .build}
+
+Getting/setting the column names:
+
+```{r}
+colnames(cities)
+```
+
+```{r}
+colnames(cities) <- c('city', 'population_cityarea', 'area_km2')
+cities
+```
+
+## Data frame inspection {.smaller .build}
+
+Getting/setting the row names:
+
+```{r}
+rownames(cities)
+```
+
+```{r}
+rownames(cities) <- c('BLN', 'PRS', 'MDRD')
+cities
+```
+
+Setting row names is usually not necessary as you can use a column as row identifier.
+
+## Accessing columns in data frames {.smaller .build}
+
+```{r}
+cities
+```
+
+Remember: **Each data frame column is a vector.** You can access a column and thereby obtain its data vector using the `$` sign:
+
+```{r}
+cities$population_cityarea
+```
+
+You can work with them as usual:
+
+```{r}
+max(cities$population_cityarea)
+```
+
+How would you calculate the mean of the area in the `cities` data frame?
+
+## Column names {.smaller .build}
+
+- column name rules are more relaxed than object name rules
+- e.g. you can use spaces but you have to use a special syntax for access then:
+
+```{r, eval=FALSE}
+cities$`city name`    # assuming that I renamed column "city" to "city name"
+## [1] "Berlin" "Paris"  "Madrid"
+```
+
+<br>
+- **it's generally a good idea to avoid spaces and other special characters also in column names**
+- arkward column names can happen during data import **&rarr; you should rename the columns before further processing!**
+
+## Adding and removing columns {.smaller .build}
+
+How would you calculate the population density (number of inhabitants per km²)?
+
+New columns can be added by assigning a vector to a new column name:
+
+```{r}
+cities$pop_density <- cities$population_cityarea / cities$area_km2
+cities
+```
+
+There are many ways to drop a column, one is to assign the special value `NULL`:
+
+```{r}
+cities$pop_density <- NULL
+cities
+```
+
+
+## Accessing rows/observations
+
+Accessing rows (i.e. observations) is called *subsetting* or *filtering*. Subsetting does not yield a vector but another data frame (a *subset* of the source data frame).
+
+You will learn how to do this with a package called *dplyr* in one of the next sessions.
+
+# Tasks
+
+## Notes on the next three weeks
+
+There won't be tutorials at the WZB for the next three weeks.
+
+**There is material for self-study at:**<br><center><b>https://wzbsocialsciencecenter.github.io/wzb_r_tutorial/</b></center>
+
+<small>
+<br>These documents cover the following topics:<br>
+<b>R Basics II:</b> Functions, object types, comparisons and logical expressions<br>
+<b>R Basics III:</b> Subsetting, working with R scripts, reading/writing data from/to file<br>
+<b>Transforming data with R I:</b> Filtering and ordering observations, selecting variables, adding new variables
+</small>
+
+**Work through these documents and tasks, because they are essential for all the other sessions.**
+
+**Lena Hipp will provide consultation hours.**
+
+## Tasks {.even-smaller}
+
+1. Install SWIRL courses that we'll need for the next sessions. You should already have installed the package *swirl*. If not, you need to do that first (see previous session's slides).
+    Next, install the interactive R courses as described **on the next slide**.
+2. Complete **lessons 1 and 4** of SWIRL Course **"R Programming"**. Lesson 3 is optional, lesson 2 should be skipped.
+3. Take a look at the last 5 tweets of [WZB_Berlin](https://twitter.com/WZB_Berlin)
+    1. Create two vectors `retweets` and `likes` that contain the respective numbers from the last 5 tweets
+    2. Create a third vector `tweet_ids` that contains the letters *a* to *e* as identifiers for the tweets
+    3. Check the data type of all three vectors using the function `class(...)`
+    4. Look at 5 more tweets, append the respective data to the vectors
+    5. Create a dataframe `tweetstats` from the three vectors
+    6. Add an additional variable/column to `tweetstats` named `interactions` which is the sum of retweets and likes for each observation
+
+*(Continued on next slide)*
+
+## Tasks {.even-smaller}
+
+<ol start=4>
+  <li>As in the previous session's tasks, we'll work with the `cats` dataset from the package *MASS*.</li>
+  <ol>
+  <li>Load the package and the dataset.</li>
+  <li>How do you bring up the dataset documentation / help for the dataset?</li>
+  <li>Identify the number of rows and columns in the dataset by using the respective R functions.</li>
+  <li>Identify the column names using the respective R function.</li>
+  <li>What are the data types of the columns in the dataset? Again, use `class(...)` to answer this question.</li>
+  <li>What if you recorded two more variables: Age and whether the cat has heart problems. Which data types would you choose for each variable?</li>
+  <li>Create a new column `wt_ratio` which is the ratio of heart and body weight. Make sure to bring both variables to a common unit of measurement (i.e. both in grams or kilograms).</li>
+</ol>
+
+## Notes on installing SWIRL courses {.smaller}
+
+First, load the package:
+
+```{r, eval=FALSE}
+library(swirl)
+```
+
+If an error message shows up, then you probably didn't install the package. You need to do this first with the command `install.packages('swirl')`.
+
+Next, install three courses with the follwing commands (see next slide, in case one of this commands fails):
+
+```{r, eval=FALSE}
+install_course_github("swirldev", "R Programming")
+install_course_github("swirldev", "Getting and Cleaning Data")
+install_course_github("swirldev", "Exploratory Data Analysis")
+```
+
+<br>
+You can start SWIRL with the following command which will guide you through the first steps:
+
+```{r, eval=FALSE}
+swirl()
+```
+
+<br>
+**One additional note:** When you receive the question *"Would you like to receive credit for completing this course on Coursera.org?"*, select "No".
+
+
+## Notes on installing SWIRL courses {.smaller}
+
+**In case installing a SWIRL course fails, do the follwing:**
+
+1. Download the ZIP file `swirl_courses-master.zip` from the following address: https://github.com/swirldev/swirl_courses/archive/master.zip
+2. Move this file to your current working directory (you can find that out via `getwd()`).
+3. Execute the following commands:
+
+```{r, eval=FALSE}
+install_course_zip("swirl_courses-master.zip", multi=TRUE,
+                   which_course = "R Programming")
+install_course_zip("swirl_courses-master.zip", multi=TRUE,
+                   which_course = "Getting and Cleaning Data")
+install_course_zip("swirl_courses-master.zip", multi=TRUE,
+                   which_course = "Exploratory Data Analysis")
+```
+
+
